@@ -50,9 +50,13 @@ Nacht sind markiert, die Leiste darüber filtert auf einen Service.
 
 ```bash
 python3 gen_demo.py        # erzeugt demo-data.json
-python3 build_previews.py  # templates/ + shared/ + Daten -> b.html
+python3 build_previews.py  # templates/ + shared/ + Daten -> a.html, b.html
 node shoot_previews.mjs    # a/b/c.html -> screenshots/*.png (Playwright + Chromium)
 ```
+
+Dieselben Templates baut `nrd build` mit einer echten Historie statt mit
+`demo-data.json` – das Format ist dasselbe. Wie die Daten entstehen, steht in
+der [README im Wurzelverzeichnis](../README.md).
 
 ## Der Datensatz
 

@@ -170,7 +170,7 @@ table.chron td.gap { color: var(--muted); font-variant-numeric: tabular-nums; }
       <div class="eyebrow">Robot Framework · Nachtlauf</div>
       <h1>Nightly Timeline</h1>
       <p class="sub">Jede Nacht ein Balken: pass, pass trotz <code>fail:</code>-Tag, bekannter
-        Fail, neuer Fail. Darüber jeder Versionssprung der sieben Services als Marke –
+        Fail, neuer Fail. Darüber jeder Versionssprung der Services als Marke –
         die Linien laufen durch das Diagramm, damit sichtbar wird, an welchem Sprung ein
         Ausschlag hängt. Balken anklicken, mit ← → durchgehen oder unten über die
         Datumsleiste zurückblättern.</p>
@@ -278,15 +278,42 @@ document.getElementById("legend").innerHTML = LEG.map(([c, cls]) =>
   `<span class="legend-item"><span class="swatch ${cls}"></span>${CAT[c].label}</span>`).join("");
 
 document.getElementById("chartHint").textContent =
-  `${RUNS.length} Nächte · ausgefallene Läufe sind ausgelassen, nicht interpoliert · `
+  `${RUNS.length} Nächte · ${TESTS.length} Tests · ${SERVICES.length} Services · `
+  + `ausgefallene Läufe sind ausgelassen, nicht interpoliert · `
   + `${VEVENTS.length} Versionssprünge in ${EVENT_RUNS.length} Nächten`;
 
 /* ------------------------------------------------------------ Geometrie */
-const SLOT = 18, BAR = 14, PADL = 54, PADR = 34, PLOT_H = 300, PADT = 10, PADB = 34;
+const PADL = 54, PADR = 34, PLOT_H = 300, PADT = 10, PADB = 34;
+
+/* Breite je Nacht aus der Zahl der Naechte statt fest: eine Historie von zwei
+   Wochen soll die Flaeche fuellen, eine von zwei Jahren nicht ueber den Rand
+   laufen. TARGET_W ist die Breite, die der Panelbereich ohne Scrollen hergibt. */
+const TARGET_W = 1150;
+const SLOT = Math.max(9, Math.min(28,
+  Math.floor((TARGET_W - PADL - PADR) / Math.max(1, RUNS.length))));
+const BAR = Math.max(4, SLOT - 4);
 const W = PADL + RUNS.length * SLOT + PADR;
-const YMAX = 220;
+
+/* Y-Achse aus den Daten: Schrittweite so, dass etwa fuenf Linien entstehen.
+   Ein fester Maximalwert stimmt nur fuer genau eine Suitegroesse - bei acht
+   Tests waeren die Balken sonst Striche am Nullpunkt. */
+function tickStep(max, target) {
+  const raw = Math.max(1, max) / target;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  return [1, 2, 2.5, 5, 10].map((m) => m * pow).find((s) => s >= raw) || 10 * pow;
+}
+const MAXTOTAL = Math.max(1, ...COUNTS.map((c) => c.total));
+const YSTEP = tickStep(MAXTOTAL, 5);
+const YMAX = Math.ceil(MAXTOTAL / YSTEP) * YSTEP;
+const YTICKS = Array.from({ length: Math.round(YMAX / YSTEP) + 1 }, (_, k) => k * YSTEP);
+
 const y = (v) => PADT + PLOT_H - (v / YMAX) * PLOT_H;
 const xOf = (i) => PADL + i * SLOT + (SLOT - BAR) / 2;
+
+/* Abstand der Datumsbeschriftungen in Naechten, gerechnet aus der Breite einer
+   Beschriftung ("Mo 06.07." in 10.5px Mono, rund 62px) plus Luft. An der Zahl
+   der Naechte darf das nicht haengen - eng wird es durch schmale Spalten. */
+const LABEL_STEP = Math.max(1, Math.ceil(90 / SLOT));
 
 function barPath(x, yTop, w, h, r) {
   if (h <= 0) return "";
@@ -315,7 +342,7 @@ const gGrid = el("g"), gEvent = el("g"), gBars = el("g"), gAxis = el("g"),
       gSel = el("g", { class: "sel-ring" });
 svg.append(gGrid, gEvent, gSel, gBars, gAxis);
 
-[0, 50, 100, 150, 200].forEach((v) => {
+YTICKS.forEach((v) => {
   gGrid.appendChild(el("line", {
     x1: PADL - 6, x2: W - PADR, y1: y(v), y2: y(v),
     stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1,
@@ -371,7 +398,9 @@ RUNS.forEach((r, i) => {
 /* Datumsachse: jede Woche eine Beschriftung, sonst kollidieren 58 Labels */
 RUNS.forEach((r, i) => {
   const isLast = i === RUNS.length - 1;
-  if (!isLast && (i % 7 !== 0 || i > RUNS.length - 5)) return;
+  /* Die letzte Nacht wird immer beschriftet; direkt davor wird ausgelassen,
+     damit sich die Beschriftungen nicht ueberlagern. */
+  if (!isLast && (i % LABEL_STEP !== 0 || i > RUNS.length - 1 - LABEL_STEP / 2)) return;
   gAxis.appendChild(el("text", {
     x: xOf(i) + BAR / 2, y: PADT + PLOT_H + 16, "text-anchor": "middle",
     fill: "var(--muted)", "font-size": 10.5,

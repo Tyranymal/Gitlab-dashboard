@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.4.2 (Python 3.11.15 on linux)" generated="2026-09-03T19:23:40.414203" rpa="false" schemaversion="5">
+<suite id="s1" name="Nightly" source="/builds/nightly/suites">
+<suite id="s1-s1" name="Device" source="/builds/nightly/suites">
+<suite id="s1-s1-s1" name="Connection" source="/builds/nightly/suites">
+<test id="s1-s1-s1-t1" name="Verify Cold Start" line="7">
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-09-03T19:23:40.451305" level="INFO">ok</msg>
+<arg>ok</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-09-03T19:23:40.450829" elapsed="0.000550"/>
+</kw>
+<status status="PASS" start="2026-09-03T19:23:40.450097" elapsed="0.001411"/>
+</test>
+<test id="s1-s1-s1-t2" name="Check Baud Rate Switch" line="10">
+<kw name="Fail" owner="BuiltIn">
+<msg time="2026-09-03T19:23:40.452510" level="FAIL">Firmware antwortet nicht</msg>
+<arg>Firmware antwortet nicht</arg>
+<doc>Fails the test with the given message and optionally alters its tags.</doc>
+<status status="FAIL" start="2026-09-03T19:23:40.452101" elapsed="0.000556">Firmware antwortet nicht</status>
+</kw>
+<tag>device</tag>
+<tag>fail:DEV-1047</tag>
+<status status="FAIL" start="2026-09-03T19:23:40.451753" elapsed="0.001136">Firmware antwortet nicht</status>
+</test>
+<test id="s1-s1-s1-t3" name="Report Watchdog Trip" line="14">
+<kw name="Fail" owner="BuiltIn">
+<msg time="2026-09-03T19:23:40.453906" level="FAIL">Unerwarteter Fehler: timeout after 30s</msg>
+<arg>Unerwarteter Fehler: timeout after 30s</arg>
+<doc>Fails the test with the given message and optionally alters its tags.</doc>
+<status status="FAIL" start="2026-09-03T19:23:40.453591" elapsed="0.000430">Unerwarteter Fehler: timeout after 30s</status>
+</kw>
+<status status="FAIL" start="2026-09-03T19:23:40.453294" elapsed="0.000882">Unerwarteter Fehler: timeout after 30s</status>
+</test>
+<test id="s1-s1-s1-t4" name="Detect Sensor Timeout" line="17">
+<kw name="Skip" owner="BuiltIn">
+<msg time="2026-09-03T19:23:40.455030" level="SKIP">noch nicht implementiert</msg>
+<arg>noch nicht implementiert</arg>
+<doc>Skips the rest of the current test.</doc>
+<status status="SKIP" start="2026-09-03T19:23:40.454731" elapsed="0.000376">noch nicht implementiert</status>
+</kw>
+<tag>smoke</tag>
+<status status="SKIP" start="2026-09-03T19:23:40.454427" elapsed="0.000814">noch nicht implementiert</status>
+</test>
+<doc>Verbindungstests.
+api-gateway: 3.5.1
+auth-service: 2.15.0</doc>
+<status status="FAIL" start="2026-09-03T19:23:40.449053" elapsed="0.006621"/>
+</suite>
+<status status="FAIL" start="2026-09-03T19:23:40.447856" elapsed="0.008495"/>
+</suite>
+<meta name="calibration-svc">0.33.1</meta>
+<meta name="ingest-service">7.3.0</meta>
+<meta name="Pipeline">48623</meta>
+<status status="FAIL" start="2026-09-03T19:23:40.415016" elapsed="0.041791"/>
+</suite>
+<statistics>
+<total>
+<stat pass="1" fail="2" skip="1">All Tests</stat>
+</total>
+<tag>
+<stat pass="0" fail="1" skip="0">device</stat>
+<stat pass="0" fail="1" skip="0">fail:DEV-1047</stat>
+<stat pass="0" fail="0" skip="1">smoke</stat>
+</tag>
+<suite>
+<stat name="Nightly" id="s1" pass="1" fail="2" skip="1">Rf</stat>
+<stat name="Device" id="s1-s1" pass="1" fail="2" skip="1">Rf.Device</stat>
+<stat name="Connection" id="s1-s1-s1" pass="1" fail="2" skip="1">Rf.Device.Connection</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

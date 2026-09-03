@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Von Hand im Format aelterer Robot-Versionen: starttime/endtime statt
+     start/elapsed, <metadata><item> statt <meta>. Inhaltlich dasselbe wie
+     rf7_output.xml, damit beide Parserwege dieselbe Erwartung erfuellen. -->
+<robot generator="Robot 6.1.1 (Python 3.9 on linux)" generated="20260903 19:23:40.414">
+<suite id="s1" name="Nightly" source="/builds/nightly/suites">
+<suite id="s1-s1" name="Device">
+<suite id="s1-s1-s1" name="Connection">
+<test id="s1-s1-s1-t1" name="Verify Cold Start">
+<kw name="Log" library="BuiltIn"><msg timestamp="20260903 19:23:40.451" level="INFO">ok</msg>
+<status status="PASS" starttime="20260903 19:23:40.450" endtime="20260903 19:23:40.451"/></kw>
+<status status="PASS" starttime="20260903 19:23:40.450" endtime="20260903 19:23:40.451"/>
+</test>
+<test id="s1-s1-s1-t2" name="Check Baud Rate Switch">
+<tag>device</tag><tag>fail:DEV-1047</tag>
+<status status="FAIL" starttime="20260903 19:23:40.452" endtime="20260903 19:23:40.453">Firmware antwortet nicht</status>
+</test>
+<test id="s1-s1-s1-t3" name="Report Watchdog Trip">
+<status status="FAIL" starttime="20260903 19:23:40.453" endtime="20260903 19:23:40.454">Unerwarteter Fehler: timeout after 30s</status>
+</test>
+<test id="s1-s1-s1-t4" name="Detect Sensor Timeout">
+<tag>smoke</tag>
+<status status="SKIP" starttime="20260903 19:23:40.454" endtime="20260903 19:23:40.455">noch nicht implementiert</status>
+</test>
+<doc>Verbindungstests.
+api-gateway: 3.5.1
+auth-service: 2.15.0</doc>
+<status status="FAIL" starttime="20260903 19:23:40.449" endtime="20260903 19:23:40.456"/>
+</suite>
+<status status="FAIL" starttime="20260903 19:23:40.447" endtime="20260903 19:23:40.456"/>
+</suite>
+<metadata>
+<item name="calibration-svc">0.33.1</item>
+<item name="ingest-service">7.3.0</item>
+<item name="Pipeline">48623</item>
+</metadata>
+<status status="FAIL" starttime="20260903 19:23:40.415" endtime="20260903 19:23:40.457"/>
+</suite>
+<statistics>
+<total><stat pass="1" fail="2" skip="1">All Tests</stat></total>
+<suite><stat name="Nightly" id="s1" pass="1" fail="2" skip="1">Nightly</stat></suite>
+</statistics>
+<errors></errors>
+</robot>

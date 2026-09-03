@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nrd"
+version = "0.1.0"
+description = "Nachtlauf-Dashboard: Robot-Framework-Laeufe einsammeln, Historie halten, HTML bauen"
+requires-python = ">=3.10"
+# Keine Laufzeit-Abhaengigkeiten: der Collector liest die output.xml mit der
+# Standardbibliothek. Damit laeuft er auch dort, wo Robot Framework nicht
+# installiert ist, und es gibt in einer abgeschotteten Instanz nichts zu
+# beschaffen ausser Python selbst.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+nrd = "nrd.cli:main"
+
+[tool.setuptools]
+packages = ["nrd"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

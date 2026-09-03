@@ -1,0 +1,107 @@
+# Nachtlauf-Dashboard.
+#
+# Zwei Wege durch diese Datei:
+#   * geplante Pipeline (CI/CD -> Schedules, nachts): Suite laufen lassen,
+#     Ergebnis einsammeln, Historie fortschreiben, Dashboard veroeffentlichen.
+#   * jede andere Pipeline: nur die Tests dieses Repos.
+#
+# `nrd` hat keine Abhaengigkeiten und wird nicht installiert - `python3 -m nrd`
+# aus dem Projektverzeichnis genuegt. In einer abgeschotteten Instanz gibt es
+# damit nichts zu beschaffen ausser dem Python-Image, das die Suite ohnehin
+# braucht.
+#
+# Vorausgesetzt:
+#   * GitLab Pages ist auf der Instanz aktiviert (sonst siehe README).
+#   * CI-Variable NRD_STORE_TOKEN: Project Access Token mit write_repository,
+#     maskiert und geschuetzt. Damit schreibt der Lauf die Historie fort.
+
+stages:
+  - test
+  - nacht
+  - deploy
+
+variables:
+  STORE_BRANCH: nightly-data     # Branch, auf dem die Historie liegt
+  STORE_DIR: data                # index.json + runs/*.json
+
+# ---------------------------------------------------------------- Eigene Tests
+pytest:
+  stage: test
+  image: python:3.12-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - pip install --quiet pytest
+    - python -m pytest -q
+
+# ------------------------------------------------------------------ Nachtlauf
+nachtlauf:
+  stage: nacht
+  image: python:3.12-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  variables:
+    # Die Commit-Liste vergleicht gegen den SHA des Vorlaufs. Der liegt bei der
+    # CI-Vorgabe (flacher Clone) nicht im Repo, und die Liste bliebe leer.
+    GIT_DEPTH: "0"
+  script:
+    - pip install --quiet robotframework
+    - git config --global user.email "ci@example.invalid"
+    - git config --global user.name "Nachtlauf"
+
+    # Historie holen. Beim allerersten Lauf gibt es den Branch noch nicht.
+    - REMOTE="https://oauth2:${NRD_STORE_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - |
+      if git clone --quiet --branch "$STORE_BRANCH" --depth 1 "$REMOTE" .store; then
+        cp -r ".store/$STORE_DIR" . 2>/dev/null || true
+      else
+        echo "Kein Branch $STORE_BRANCH - die Historie beginnt mit diesem Lauf."
+        git init --quiet .store && git -C .store checkout -q -b "$STORE_BRANCH"
+        git -C .store remote add origin "$REMOTE"
+      fi
+
+    # Die Suite. Robot meldet die Zahl der fehlgeschlagenen Tests als Exitcode;
+    # erst ab 251 ist Robot selbst gescheitert (kaputte Testdaten, Abbruch).
+    # Rote Tests duerfen den Job nicht abbrechen - sonst gibt es keinen Lauf.
+    - |
+      set +e
+      robot --outputdir rf-out --output output.xml --name Nightly suites/
+      RC=$?
+      set -e
+      test "$RC" -lt 251 || { echo "Robot abgebrochen (Exitcode $RC)"; exit "$RC"; }
+
+    - python3 -m nrd collect
+        --output-xml rf-out/output.xml
+        --store "$STORE_DIR"
+        --repo .
+        --pipeline-id "$CI_PIPELINE_ID"
+    - python3 -m nrd info --store "$STORE_DIR"
+
+    # Historie zurueckschreiben. Das ist der einzige dauerhafte Zustand des
+    # Dashboards - Job-Artefakte verfallen, 58 Naechte ueberleben das nicht.
+    - |
+      rm -rf ".store/$STORE_DIR" && cp -r "$STORE_DIR" .store/
+      cd .store
+      git add -A
+      git diff --cached --quiet || git commit -qm "Nachtlauf $(date +%F) (Pipeline $CI_PIPELINE_ID)"
+      git push -q origin "$STORE_BRANCH"
+  artifacts:
+    name: "nachtlauf-$CI_PIPELINE_ID"
+    paths:
+      - $STORE_DIR
+      - rf-out/output.xml
+    expire_in: 30 days
+
+# ------------------------------------------------------------ Veroeffentlichen
+pages:
+  stage: deploy
+  image: python:3.12-slim
+  needs: ["nachtlauf"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - python3 -m nrd build --store "$STORE_DIR" --out public/index.html
+  artifacts:
+    paths:
+      - public
