@@ -22,5 +22,10 @@ nrd = "nrd.cli:main"
 [tool.setuptools]
 packages = ["nrd"]
 
+# Das Layout gehoert ins Paket - sonst baut eine Installation ohne das
+# Repo-Verzeichnis daneben keine Seite mehr.
+[tool.setuptools.package-data]
+nrd = ["layout/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

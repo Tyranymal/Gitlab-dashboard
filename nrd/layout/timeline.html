@@ -100,6 +100,32 @@
 .list-row .test { font-size: 12.5px; }
 .list-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .empty { color: var(--muted); font-size: 12.5px; padding: 10px 0; }
+
+/* Fehlermeldung eines Tests: eine Zeile, per Klick ganz. Aufgeklappt bleibt
+   sie umbrochen - Robot-Meldungen sind oft eine halbe Bildschirmbreite. */
+.msg {
+  grid-column: 2;
+  font: inherit;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: none;
+  border-left: 2px solid var(--st-new);
+  padding: 4px 8px;
+  margin-top: 5px;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.msg[aria-expanded="true"] { -webkit-line-clamp: unset; line-clamp: unset; }
+.msg.known { border-left-color: var(--st-known); }
 .selhead {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--grid);
@@ -238,6 +264,7 @@ table.chron td.gap { color: var(--muted); font-variant-numeric: tabular-nums; }
         <span class="eyebrow">Status-Wechsel</span>
         <span class="run-id mono" id="selDate2"></span>
       </div>
+      <div class="filters" id="changeModes"></div>
       <div class="list" id="changes"></div>
     </section>
     <section class="panel">
@@ -484,6 +511,7 @@ RUNS.forEach((r, i) => {
 /* ------------------------------------------------------------ Auswahl */
 let sel = RUNS.length - 1;
 let chronFilter = "all";
+let failMode = false;      /* Status-Card: Wechsel oder alle Fehlschlaege */
 
 function select(i) {
   sel = Math.max(0, Math.min(RUNS.length - 1, i));
@@ -535,7 +563,7 @@ const NAV = {
 
 /* Ein Versionswechsel als Satzstueck: "ingest-service 7.2.1 -> 7.3.0 (minor)" */
 function bumpHtml(x) {
-  return `<span class="b"><b>${x.name}</b> ${x.from}<span class="arrow">→</span>${x.to}` +
+  return `<span class="b"><b>${esc(x.name)}</b> ${esc(x.from)}<span class="arrow">→</span>${esc(x.to)}` +
          `<span class="bumptag">${x.kind}</span></span>`;
 }
 
@@ -567,6 +595,24 @@ function renderNav() {
   dis("navNextEv", nextEventRun(sel, +1) === null);
 }
 
+/* Fehlermeldung eines Tests, sofern sie eingebettet ist. `nrd build` legt sie
+   nur fuer die juengsten Naechte bei - genau die, die morgens jemand aufmacht;
+   fuer aeltere bleibt die Detaildatei im Archiv die Quelle. */
+function msgHtml(runIdx, testIdx, known) {
+  const msgs = RUNS[runIdx].msgs;
+  const m = msgs && msgs[String(testIdx)];
+  if (!m) return "";
+  return `<button class="msg${known ? " known" : ""}" type="button"
+            aria-expanded="false">${esc(m)}</button>`;
+}
+
+/* Ein Klick auf die Meldung klappt sie auf und wieder zu. */
+function wireMsgs(host) {
+  host.querySelectorAll(".msg").forEach((b) => b.addEventListener("click", () =>
+    b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true"
+      ? "false" : "true")));
+}
+
 /* ------------------------------------------------------ Detail-Panels */
 function renderDetail() {
   const r = RUNS[sel], d = DIFFS[sel], cd = CDIFFS[sel], prev = sel > 0 ? RUNS[sel - 1] : null;
@@ -582,32 +628,70 @@ function renderDetail() {
   } else {
     r.commits.forEach((c) => {
       cList.appendChild(el("div", { class: "list-row", html:
-        `<span class="sha mono">${c.sha.slice(0, 7)}</span>
-         <span><span class="subject">${c.subject}</span>
-         <div class="meta mono">${c.author}</div></span>` }));
+        `<span class="sha mono">${esc(c.sha.slice(0, 7))}</span>
+         <span><span class="subject">${esc(c.subject)}</span>
+         <div class="meta mono">${esc(c.author)}</div></span>` }));
     });
   }
 
+  /* Zwei Sichten auf dieselbe Nacht: was sich geaendert hat, und was rot ist.
+     Ein Test, der die dritte Nacht in Folge faellt, taucht in keiner
+     Wechselliste auf - seine Meldung waere sonst nirgends zu sehen. */
+  const failIdx = [];
+  for (let i = 0; i < r.s.length; i++) if (FAILISH.includes(r.s[i])) failIdx.push(i);
+  const modes = document.getElementById("changeModes");
+  modes.innerHTML =
+    `<button class="fbtn" type="button" data-m="changes" aria-pressed="${!failMode}">
+       Wechsel <span class="cnt">${d.changed || 0}</span></button>
+     <button class="fbtn" type="button" data-m="fails" aria-pressed="${failMode}">
+       alle Fehlschläge <span class="cnt">${failIdx.length}</span></button>`;
+  modes.querySelectorAll(".fbtn").forEach((b) => b.addEventListener("click", () => {
+    failMode = b.dataset.m === "fails";
+    renderDetail();
+  }));
+
   const chList = document.getElementById("changes");
   chList.innerHTML = "";
-  const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
-  const rows = [];
-  order.forEach((k) => d[k] && d[k].forEach((e) => rows.push([k, e])));
-  if (!rows.length) {
-    chList.appendChild(el("div", { class: "empty",
-      html: prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf – keine Vergleichsbasis." }));
+  if (failMode) {
+    if (!failIdx.length) {
+      chList.appendChild(el("div", { class: "empty", text: "Kein Test ist fehlgeschlagen." }));
+    } else {
+      /* Neue Fails zuerst - das ist die Arbeit fuer heute. */
+      failIdx.sort((a, b) => (r.s[a] === "F" ? 0 : 1) - (r.s[b] === "F" ? 0 : 1));
+      failIdx.forEach((i) => {
+        const code = r.s[i], t = TESTS[i];
+        chList.appendChild(el("div", { class: "list-row", html:
+          `<span class="chip"><span class="dot" style="background:var(${CAT[code].varName})"></span>${CAT[code].label}</span>
+           <span><span class="test mono">${esc(t.name)}</span>
+           <div class="meta mono">${esc(t.suite)}</div></span>
+           ${msgHtml(sel, i, code === "f")}` }));
+      });
+    }
   } else {
-    rows.slice(0, 40).forEach(([k, e]) => {
-      const m = DIFF_META[k];
-      chList.appendChild(el("div", { class: "list-row", html:
-        `<span class="chip"><span class="dot" style="background:var(${m.varName})"></span>${m.label}</span>
-         <span><span class="test mono">${e.test.name}</span>
-         <div class="meta mono">${e.test.suite}</div></span>` }));
-    });
-    if (rows.length > 40) {
-      chList.appendChild(el("div", { class: "empty", text: `… und ${rows.length - 40} weitere` }));
+    const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
+    const rows = [];
+    order.forEach((k) => d[k] && d[k].forEach((e) => rows.push([k, e])));
+    if (!rows.length) {
+      chList.appendChild(el("div", { class: "empty",
+        html: prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf – keine Vergleichsbasis." }));
+    } else {
+      rows.slice(0, 40).forEach(([k, e]) => {
+        const m = DIFF_META[k];
+        /* Meldung nur, wo der Test danach auch rot ist - bei "wieder gruen"
+           stuende die Meldung von vorgestern. */
+        const rot = FAILISH.includes(e.to);
+        chList.appendChild(el("div", { class: "list-row", html:
+          `<span class="chip"><span class="dot" style="background:var(${m.varName})"></span>${m.label}</span>
+           <span><span class="test mono">${esc(e.test.name)}</span>
+           <div class="meta mono">${esc(e.test.suite)}</div></span>
+           ${rot ? msgHtml(sel, e.i, e.to === "f") : ""}` }));
+      });
+      if (rows.length > 40) {
+        chList.appendChild(el("div", { class: "empty", text: `… und ${rows.length - 40} weitere` }));
+      }
     }
   }
+  wireMsgs(chList);
 
   /* Versionswechsel der gewaehlten Nacht gegenueber dem Vorlauf */
   const vList = document.getElementById("vevents");
@@ -633,9 +717,9 @@ function renderDetail() {
       + (ref.note ? `<span class="miss">${ref.note}</span>` : "") }));
     cd.forEach((x) => {
       vList.appendChild(el("div", { class: "vrow", html:
-        `<span class="n">${x.name}</span>
+        `<span class="n">${esc(x.name)}</span>
          <span><span class="bumptag">${x.kind}</span></span>
-         <span class="jump">Version ${x.from}<span class="arrow">→</span>${x.to}</span>` }));
+         <span class="jump">Version ${esc(x.from)}<span class="arrow">→</span>${esc(x.to)}</span>` }));
     });
   }
 }

@@ -56,7 +56,8 @@ def cmd_build(args) -> int:
         print(f"Fehler: Template {args.template} fehlt - Pfad mit --template angeben",
               file=sys.stderr)
         return 2
-    out = build_mod.build(args.template, data, args.out, args.assets)
+    out = build_mod.build(args.template, data, args.out, args.assets,
+                          runs_dir=Path(args.store) / "runs", messages=args.messages)
     print(f"{out}  {out.stat().st_size / 1024:.0f} KB")
     return 0
 
@@ -95,6 +96,8 @@ def main(argv=None) -> int:
     b.add_argument("--template", default=str(build_mod.DEFAULT_TEMPLATE))
     b.add_argument("--assets", default=str(build_mod.DEFAULT_ASSETS))
     b.add_argument("--out", default="public/index.html")
+    b.add_argument("--messages", type=int, default=5,
+                   help="Fehlermeldungen der juengsten N Naechte einbetten (0 = keine)")
     b.set_defaults(func=cmd_build)
 
     i = sub.add_parser("info", help="Historie zusammenfassen")

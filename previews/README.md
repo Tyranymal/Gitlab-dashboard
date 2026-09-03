@@ -20,6 +20,10 @@ Empfaenger die HTML-Dateien nicht selbst oeffnen will.
 weiterhin, geht aber noch von *einer* Release-Version aus – der Annahme, die sich als
 falsch herausgestellt hat. Ihr Template liegt unter `_archived/`.
 
+Die Templates von A und B liegen nicht mehr hier, sondern unter
+[`nrd/layout/`](../nrd/layout) – dasselbe Layout baut `nrd build` mit echten
+Daten, und so bleibt es bei einem Verzeichnis zum Kopieren.
+
 ## Was Variante A zeigt
 
 Über dem Balkendiagramm liegt kein Release-Band mehr, sondern ein Ereignisband: je Nacht
@@ -50,7 +54,7 @@ Nacht sind markiert, die Leiste darüber filtert auf einen Service.
 
 ```bash
 python3 gen_demo.py        # erzeugt demo-data.json
-python3 build_previews.py  # templates/ + shared/ + Daten -> a.html, b.html
+python3 build_previews.py  # nrd/layout/ + Daten -> a.html, b.html
 node shoot_previews.mjs    # a/b/c.html -> screenshots/*.png (Playwright + Chromium)
 ```
 

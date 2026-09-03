@@ -698,6 +698,15 @@ function el(tag, attrs, children) {
 }
 function testLabel(t) { return t.suite + " › " + t.name; }
 
+/* Freitext aus der Suite - Testnamen, Commit-Betreffe, Fehlermeldungen - geht
+   nie ungeprueft ins Markup. Ein Test namens "A < B" wuerde sonst das Layout
+   zerlegen, und eine Fehlermeldung kann alles enthalten. */
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /* Ereignissicht auf dieselben Daten: jeder Versionswechsel als eigener Eintrag,
    chronologisch ueber alle Laeufe. VSPANS_BY_SERVICE zeigt Zustaende ("welche
    Version lief wann"), VEVENTS die Uebergaenge ("was sprang wann"). Fuer eine
