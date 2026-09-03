@@ -7,16 +7,35 @@ haben im Browser-Kontext oft keinen Internetzugang.
 
 | Datei | Variante | Stand |
 |---|---|---|
-| `b.html` | **Master / Detail** – gewählt | aktuell, mit Microservice-Versionen |
-| `a.html` | Timeline mit Versionsband | eingefroren, einzelne Release-Version |
+| `a.html` | **Timeline (Balkendiagramm)** – gewählt | aktuell, mit Microservice-Versionen |
+| `b.html` | Master / Detail | aktuell, mit Microservice-Versionen |
 | `c.html` | Test-×-Nacht-Matrix | eingefroren, einzelne Release-Version |
 
 Screenshots der drei Varianten liegen unter `screenshots/` – zum Verschicken, wenn der
 Empfaenger die HTML-Dateien nicht selbst oeffnen will.
 
-`a.html` und `c.html` bleiben als Referenz liegen. Sie enthalten ihre Daten inline und
-rendern weiterhin, gehen aber noch von *einer* Release-Version aus – der Annahme, die
-sich als falsch herausgestellt hat. Ihre Templates liegen unter `_archived/`.
+`c.html` bleibt als Referenz liegen. Die Datei enthält ihre Daten inline und rendert
+weiterhin, geht aber noch von *einer* Release-Version aus – der Annahme, die sich als
+falsch herausgestellt hat. Ihr Template liegt unter `_archived/`.
+
+## Was Variante A zeigt
+
+Über dem Balkendiagramm liegt kein Release-Band mehr, sondern ein Ereignisband: je Nacht
+ein Kästchen pro Service, der in neuer Version lief. Die Höhe des Stapels ist damit die
+Zahl der Sprünge, und durch jede Nacht mit Sprung läuft eine Senkrechte durch beide
+Diagramme – erst dadurch lässt sich ein Ausschlag einem Sprung zuordnen, ohne zwischen
+zwei Grafiken hin und her zu messen.
+
+Unter dem Diagramm steht eine Datumsleiste. Sie blättert nachtweise (`◀ Nacht`), springt
+von Versionsereignis zu Versionsereignis (`◀◀ Sprung`) und zurück auf die neueste Nacht.
+Alles darunter – Commits, Status-Wechsel, Versionsereignisse – sowie die Kennzahlen oben
+folgen der Auswahl; ist nicht die neueste Nacht gewählt, sagt das die Kopfzeile der
+Hero-Kachel. Balken anklicken und ← → im fokussierten Diagramm tun dasselbe.
+
+Die Chronik am Seitenende führt jeden der 31 Versionssprünge als eigene Zeile: Nacht,
+Service, `vorher → nachher`, Art des Sprungs und der Abstand zum vorherigen Sprung
+desselben Service. Datum anklicken wählt die Nacht oben aus; die Zeilen der gewählten
+Nacht sind markiert, die Leiste darüber filtert auf einen Service.
 
 ## Neu bauen
 

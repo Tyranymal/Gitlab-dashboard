@@ -180,3 +180,22 @@ function el(tag, attrs, children) {
   return node;
 }
 function testLabel(t) { return t.suite + " › " + t.name; }
+
+/* Ereignissicht auf dieselben Daten: jeder Versionswechsel als eigener Eintrag,
+   chronologisch ueber alle Laeufe. VSPANS_BY_SERVICE zeigt Zustaende ("welche
+   Version lief wann"), VEVENTS die Uebergaenge ("was sprang wann"). Fuer eine
+   Chronik und fuer Sprungnavigation ist die Ereignisform die brauchbarere. */
+const VEVENTS = RUNS.flatMap((r, i) =>
+  CDIFFS[i].map((c) => Object.assign({ i, run_id: r.run_id }, c)));
+
+/* Laufindizes mit mindestens einem Versionssprung - die Rastpunkte, auf die
+   "voriges/naechstes Ereignis" springt. */
+const EVENT_RUNS = [...new Set(VEVENTS.map((e) => e.i))];
+
+/* Naechster Ereignislauf in Richtung dir (-1/+1), oder null am Rand. */
+function nextEventRun(from, dir) {
+  const hit = dir < 0
+    ? EVENT_RUNS.filter((i) => i < from).pop()
+    : EVENT_RUNS.find((i) => i > from);
+  return hit === undefined ? null : hit;
+}
