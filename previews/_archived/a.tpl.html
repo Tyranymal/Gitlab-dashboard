@@ -1,0 +1,396 @@
+<title>Nightly Timeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/*__CSS__*/
+
+.hero-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--st-new);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.hero .figure { font-size: 52px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.hero .cap { color: var(--ink-2); font-size: 13px; margin-top: 6px; }
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.tile { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.tile .val { font-size: 22px; font-weight: 600; line-height: 1.1; }
+.tile .val .unit { font-size: 13px; font-weight: 400; color: var(--ink-2); }
+.tile .delta { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.vband { display: block; }
+.chart-wrap { position: relative; }
+.bar-hit { cursor: pointer; }
+.sel-ring { pointer-events: none; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .split, .hero-row { grid-template-columns: 1fr; } }
+
+.list { display: flex; flex-direction: column; }
+.list-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--grid);
+  align-items: baseline;
+}
+.list-row:last-child { border-bottom: none; }
+.list-row .sha { font-size: 11px; color: var(--muted); }
+.list-row .subject { font-size: 13px; }
+.list-row .test { font-size: 12.5px; }
+.list-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.empty { color: var(--muted); font-size: 12.5px; padding: 10px 0; }
+.selhead {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--grid);
+}
+.selhead .run-id { font-size: 15px; font-weight: 600; }
+.hint { font-size: 11.5px; color: var(--muted); }
+</style>
+
+<div class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Robot Framework · Nachtlauf</div>
+      <h1>Nightly Timeline</h1>
+      <p class="sub">Jede Nacht ein Balken: pass, pass trotz <code>fail:</code>-Tag, bekannter
+        Fail, neuer Fail. Darüber das Release, darunter was sich seit dem letzten Lauf
+        verändert hat. Balken anklicken oder mit ← → durchgehen.</p>
+    </div>
+    <div class="variant-tag">Variante A · Timeline</div>
+  </header>
+
+  <div class="hero-row">
+    <div class="hero">
+      <div class="eyebrow">Letzter Lauf</div>
+      <div class="figure tnum" id="heroVal">–</div>
+      <div class="cap" id="heroCap">neue Fails ohne <code>fail:</code>-Tag</div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Ergebnisse je Nacht</h2>
+        <div class="hint" id="chartHint">58 Nächte · zwei ausgefallene Läufe sind ausgelassen, nicht interpoliert</div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="scroll-x chart-wrap">
+      <svg id="vband" class="vband" role="img" aria-label="Release-Version je Nacht"></svg>
+      <svg id="chart" tabindex="0" role="application"
+           aria-label="Gestapelte Balken: Testergebnisse je Nacht. Mit Pfeiltasten navigieren."></svg>
+      <div class="submicro">
+        <span class="eyebrow">Nur neue Fails · eigene Skala</span>
+        <span class="hint">im Gesamtbalken geht die Zahl sonst unter</span>
+      </div>
+      <svg id="newfails" role="img" aria-label="Neue Fails je Nacht, eigene Skala"></svg>
+    </div>
+    <details class="tableview">
+      <summary>Tabellenansicht der Läufe</summary>
+      <div class="wrap"><table class="data" id="runTable"></table></div>
+    </details>
+  </section>
+
+  <div class="split">
+    <section class="panel">
+      <div class="selhead">
+        <span class="eyebrow">Commits seit dem letzten Lauf</span>
+        <span class="run-id mono" id="selDate1"></span>
+      </div>
+      <div class="list" id="commits"></div>
+    </section>
+    <section class="panel">
+      <div class="selhead">
+        <span class="eyebrow">Status-Wechsel</span>
+        <span class="run-id mono" id="selDate2"></span>
+      </div>
+      <div class="list" id="changes"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/;
+</script>
+<script>
+/*__CORE__*/
+
+/* ---------------------------------------------------------------- Legende */
+const LEG = [["P", "sw-pass"], ["p", "sw-passtag"], ["f", "sw-known"], ["F", "sw-new"]];
+document.getElementById("legend").innerHTML = LEG.map(([c, cls]) =>
+  `<span class="legend-item"><span class="swatch ${cls}"></span>${CAT[c].label}</span>`).join("");
+
+/* ------------------------------------------------------------ Geometrie */
+const SLOT = 18, BAR = 14, PADL = 54, PADR = 34, PLOT_H = 300, PADT = 10, PADB = 34;
+const W = PADL + RUNS.length * SLOT + PADR;
+const YMAX = 220;
+const y = (v) => PADT + PLOT_H - (v / YMAX) * PLOT_H;
+const xOf = (i) => PADL + i * SLOT + (SLOT - BAR) / 2;
+
+function barPath(x, yTop, w, h, r) {
+  if (h <= 0) return "";
+  const rr = Math.min(r, h, w / 2);
+  return `M${x},${yTop + h} L${x},${yTop + rr} Q${x},${yTop} ${x + rr},${yTop}
+          L${x + w - rr},${yTop} Q${x + w},${yTop} ${x + w},${yTop + rr}
+          L${x + w},${yTop + h} Z`;
+}
+
+/* ------------------------------------------------------ Hauptdiagramm */
+const svg = document.getElementById("chart");
+svg.setAttribute("width", W);
+svg.setAttribute("height", PADT + PLOT_H + PADB);
+svg.setAttribute("viewBox", `0 0 ${W} ${PADT + PLOT_H + PADB}`);
+
+const gGrid = el("g"), gBars = el("g"), gAxis = el("g"), gSel = el("g", { class: "sel-ring" });
+svg.append(gGrid, gBars, gSel, gAxis);
+
+[0, 50, 100, 150, 200].forEach((v) => {
+  gGrid.appendChild(el("line", {
+    x1: PADL - 6, x2: W - PADR, y1: y(v), y2: y(v),
+    stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1,
+  }));
+  gGrid.appendChild(el("text", {
+    x: PADL - 10, y: y(v) + 4, "text-anchor": "end", fill: "var(--muted)",
+    "font-size": 10.5, "font-family": "IBM Plex Mono, monospace", text: String(v),
+  }));
+});
+
+RUNS.forEach((r, i) => {
+  const c = COUNTS[i];
+  let acc = 0;
+  const g = el("g");
+  STACK.forEach((code, k) => {
+    const v = c[code];
+    if (!v) { return; }
+    const yBottom = y(acc), yTop = y(acc + v);
+    const isTop = STACK.slice(k + 1).every((cc) => !c[cc]);
+    let h = yBottom - yTop;
+    /* 2px Flaechenluecke zwischen den Segmenten - trennt ohne zusaetzliche Linie */
+    if (k > 0 && h > 3) h -= 2;
+    g.appendChild(el("path", {
+      d: barPath(xOf(i), yTop, BAR, h, isTop ? 4 : 0),
+      fill: `var(${CAT[code].varName})`,
+    }));
+    acc += v;
+  });
+  /* Trefferflaeche ueber die volle Hoehe, damit auch duenne Segmente greifbar sind */
+  const hit = el("rect", {
+    x: PADL + i * SLOT, y: PADT, width: SLOT, height: PLOT_H,
+    fill: "transparent", class: "bar-hit",
+  });
+  hit.addEventListener("mouseenter", (e) => showTip(runTipHtml(i), e));
+  hit.addEventListener("mousemove", moveTip);
+  hit.addEventListener("mouseleave", hideTip);
+  hit.addEventListener("click", () => select(i));
+  g.appendChild(hit);
+  gBars.appendChild(g);
+});
+
+/* Datumsachse: jede Woche eine Beschriftung, sonst kollidieren 58 Labels */
+RUNS.forEach((r, i) => {
+  const isLast = i === RUNS.length - 1;
+  if (!isLast && (i % 7 !== 0 || i > RUNS.length - 5)) return;
+  gAxis.appendChild(el("text", {
+    x: xOf(i) + BAR / 2, y: PADT + PLOT_H + 16, "text-anchor": "middle",
+    fill: "var(--muted)", "font-size": 10.5,
+    "font-family": "IBM Plex Mono, monospace", text: fmtDate(r.run_id),
+  }));
+});
+
+/* Versionswechsel als Marke im Diagramm */
+VSPANS.slice(1).forEach((sp) => {
+  const x = PADL + sp.start * SLOT - 1;
+  gAxis.appendChild(el("line", {
+    x1: x, x2: x, y1: PADT, y2: PADT + PLOT_H + 4,
+    stroke: "var(--accent)", "stroke-width": 1,
+  }));
+});
+
+/* ------------------------------------------- Kleines Diagramm: neue Fails */
+const NF = RUNS.map((r, i) => COUNTS[i].F);
+const NFMAX = Math.max(4, Math.ceil(Math.max(...NF) / 2) * 2 + 2);
+const NFH = 76;
+const nsvg = document.getElementById("newfails");
+nsvg.setAttribute("width", W);
+nsvg.setAttribute("height", NFH + 24);
+nsvg.setAttribute("viewBox", `0 0 ${W} ${NFH + 24}`);
+const ny = (v) => 8 + NFH - (v / NFMAX) * NFH;
+[0, NFMAX / 2, NFMAX].forEach((v) => {
+  nsvg.appendChild(el("line", { x1: PADL - 6, x2: W - PADR, y1: ny(v), y2: ny(v),
+    stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }));
+  nsvg.appendChild(el("text", { x: PADL - 10, y: ny(v) + 4, "text-anchor": "end",
+    fill: "var(--muted)", "font-size": 10.5, "font-family": "IBM Plex Mono, monospace",
+    text: String(v) }));
+});
+RUNS.forEach((r, i) => {
+  const v = NF[i];
+  if (v > 0) {
+    nsvg.appendChild(el("path", {
+      d: barPath(xOf(i), ny(v), BAR, ny(0) - ny(v), 4), fill: "var(--st-new)",
+    }));
+  }
+  const hit = el("rect", { x: PADL + i * SLOT, y: 4, width: SLOT, height: NFH + 8,
+    fill: "transparent", class: "bar-hit" });
+  hit.addEventListener("mouseenter", (e) => showTip(runTipHtml(i), e));
+  hit.addEventListener("mousemove", moveTip);
+  hit.addEventListener("mouseleave", hideTip);
+  hit.addEventListener("click", () => select(i));
+  nsvg.appendChild(hit);
+});
+
+/* -------------------------------------------------------- Versionsband */
+const vb = document.getElementById("vband");
+vb.setAttribute("width", W);
+vb.setAttribute("height", 30);
+vb.setAttribute("viewBox", `0 0 ${W} 30`);
+vb.appendChild(el("text", { x: PADL - 10, y: 19, "text-anchor": "end", fill: "var(--muted)",
+  "font-size": 10, "font-family": "IBM Plex Mono, monospace", text: "Release" }));
+VSPANS.forEach((sp) => {
+  const x0 = PADL + sp.start * SLOT, x1 = PADL + (sp.end + 1) * SLOT;
+  const ci = Math.min(sp.idx, VCOLORS.length - 1);
+  vb.appendChild(el("rect", { x: x0 + 1, y: 6, width: x1 - x0 - 2, height: 17,
+    fill: `var(${VCOLORS[ci]})`, rx: 2 }));
+  if (sp.idx > 0) {
+    vb.appendChild(el("line", { x1: x0, x2: x0, y1: 2, y2: 27,
+      stroke: "var(--accent)", "stroke-width": 1 }));
+  }
+  if (x1 - x0 > 66) {
+    vb.appendChild(el("text", { x: x0 + 8, y: 18.5, fill: `var(${VINKS[ci]})`,
+      "font-size": 11, "font-family": "IBM Plex Mono, monospace",
+      "font-weight": 500, text: sp.version }));
+  }
+});
+
+/* ------------------------------------------------------------ Auswahl */
+let sel = RUNS.length - 1;
+
+function select(i) {
+  sel = Math.max(0, Math.min(RUNS.length - 1, i));
+  gSel.innerHTML = "";
+  gSel.appendChild(el("rect", {
+    x: PADL + sel * SLOT, y: PADT - 2, width: SLOT, height: PLOT_H + 2,
+    fill: "var(--surface-2)",
+  }));
+  gSel.appendChild(el("rect", {
+    x: PADL + sel * SLOT, y: PADT + PLOT_H + 1, width: SLOT, height: 2,
+    fill: "var(--accent)",
+  }));
+  renderDetail();
+}
+
+svg.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft")  { select(sel - 1); e.preventDefault(); }
+  if (e.key === "ArrowRight") { select(sel + 1); e.preventDefault(); }
+  if (e.key === "Home")       { select(0); e.preventDefault(); }
+  if (e.key === "End")        { select(RUNS.length - 1); e.preventDefault(); }
+});
+
+/* ------------------------------------------------------ Detail-Panels */
+function renderDetail() {
+  const r = RUNS[sel], d = DIFFS[sel], prev = sel > 0 ? RUNS[sel - 1] : null;
+  document.getElementById("selDate1").textContent = fmtDateLong(r.run_id);
+  document.getElementById("selDate2").textContent = fmtDateLong(r.run_id);
+
+  const cList = document.getElementById("commits");
+  cList.innerHTML = "";
+  if (!r.commits.length) {
+    cList.appendChild(el("div", { class: "empty",
+      html: prev ? `Keine neuen Commits seit <span class="mono">${prev.sha.slice(0, 7)}</span>.`
+                 : "Erster Lauf – keine Vergleichsbasis." }));
+  } else {
+    r.commits.forEach((c) => {
+      cList.appendChild(el("div", { class: "list-row", html:
+        `<span class="sha mono">${c.sha.slice(0, 7)}</span>
+         <span><span class="subject">${c.subject}</span>
+         <div class="meta mono">${c.author}</div></span>` }));
+    });
+  }
+
+  const chList = document.getElementById("changes");
+  chList.innerHTML = "";
+  const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
+  const rows = [];
+  order.forEach((k) => d[k] && d[k].forEach((e) => rows.push([k, e])));
+  if (!rows.length) {
+    chList.appendChild(el("div", { class: "empty",
+      html: prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf – keine Vergleichsbasis." }));
+  } else {
+    rows.slice(0, 40).forEach(([k, e]) => {
+      const m = DIFF_META[k];
+      chList.appendChild(el("div", { class: "list-row", html:
+        `<span class="chip"><span class="dot" style="background:var(${m.varName})"></span>${m.label}</span>
+         <span><span class="test mono">${e.test.name}</span>
+         <div class="meta mono">${e.test.suite}</div></span>` }));
+    });
+    if (rows.length > 40) {
+      chList.appendChild(el("div", { class: "empty", text: `… und ${rows.length - 40} weitere` }));
+    }
+  }
+}
+
+/* ------------------------------------------------------------- Kacheln */
+function renderTiles() {
+  const i = RUNS.length - 1, c = COUNTS[i], p = COUNTS[i - 1], r = RUNS[i];
+  const delta = (now, before, invert) => {
+    const dv = now - before;
+    if (dv === 0) return `<span class="delta">unverändert</span>`;
+    const sign = dv > 0 ? "+" : "−";
+    return `<span class="delta">${sign}${Math.abs(dv)} ggü. Vornacht</span>`;
+  };
+  document.getElementById("heroVal").textContent = c.F;
+  document.getElementById("heroCap").innerHTML =
+    `neue Fails ohne <code>fail:</code>-Tag · ${delta(c.F, p.F)}`;
+
+  document.getElementById("tiles").innerHTML = [
+    ["Tests gesamt", c.total, `<span class="delta">${pct(c.pass, c.total)} grün</span>`],
+    ["Pass", c.P, delta(c.P, p.P)],
+    ["Pass mit fail-Tag", c.p, `<span class="delta">Tag-Kandidaten</span>`],
+    ["Fails bekannt", c.f, delta(c.f, p.f)],
+    ["Release", `<span style="font-size:17px">${r.release_version}</span>`,
+      `<span class="delta">Quelle: ${r.version_source === "metadata" ? "Suite-Metadata" : "Suite-Doku"}</span>`],
+    ["Laufzeit", `<span style="font-size:17px">${fmtDuration(r.elapsed_s)}</span>`,
+      `<span class="delta">Pipeline #${r.pipeline_id}</span>`],
+  ].map(([label, val, sub]) => `
+    <div class="tile"><span class="eyebrow">${label}</span>
+      <span class="val tnum">${val}</span>${sub}</div>`).join("");
+}
+
+/* -------------------------------------------------------- Tabellenansicht */
+function renderTable() {
+  const head = `<thead><tr><th>Nacht</th><th>Release</th><th>Gesamt</th><th>Pass</th>
+    <th>Pass+Tag</th><th>Fail bekannt</th><th>Fail neu</th><th>Wechsel</th><th>Commits</th></tr></thead>`;
+  const body = RUNS.map((r, i) => {
+    const c = COUNTS[i], d = DIFFS[i];
+    return `<tr><td class="mono">${r.run_id}</td><td class="mono">${r.release_version}</td>
+      <td>${c.total}</td><td>${c.P}</td><td>${c.p}</td><td>${c.f}</td><td>${c.F}</td>
+      <td>${d.changed || 0}</td><td>${r.commits.length}</td></tr>`;
+  }).reverse().join("");
+  document.getElementById("runTable").innerHTML = head + "<tbody>" + body + "</tbody>";
+}
+
+renderTiles();
+renderTable();
+select(RUNS.length - 1);
+document.querySelector(".chart-wrap").scrollLeft = W;
+</script>

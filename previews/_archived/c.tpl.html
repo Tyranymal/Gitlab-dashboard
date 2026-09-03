@@ -1,0 +1,333 @@
+<title>Nightly Test Matrix</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/*__CSS__*/
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tbtn {
+  font: inherit; font-size: 12px; font-family: "IBM Plex Mono", monospace;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--border-hard); border-radius: 3px;
+  padding: 3px 10px; cursor: pointer;
+}
+.tbtn:hover { background: var(--surface-2); }
+.tbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+.matrix-scroll { max-height: 620px; overflow: auto; border-top: 1px solid var(--grid); }
+.matrix-scroll svg { display: block; }
+.summary-wrap { overflow: hidden; }
+
+.hint { font-size: 11.5px; color: var(--muted); }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+.list-row {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--grid); align-items: baseline;
+}
+.list-row:last-child { border-bottom: none; }
+.list-row .sha { font-size: 11px; color: var(--muted); }
+.list-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.empty { color: var(--muted); font-size: 12.5px; padding: 10px 0; }
+.selhead {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--grid);
+}
+.selhead .run-id { font-size: 15px; font-weight: 600; }
+.cellwrap { position: relative; }
+</style>
+
+<div class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Robot Framework · Nachtlauf</div>
+      <h1>Nightly Test Matrix</h1>
+      <p class="sub">Eine Zeile je Test, eine Spalte je Nacht. Muster, die in Tagessummen
+        untergehen – ein Test, der jede zweite Nacht kippt; eine Regression, die mit einem
+        Release aufbricht und Wochen später verschwindet – werden hier als Fläche sichtbar.</p>
+    </div>
+    <div class="variant-tag">Variante C · Matrix</div>
+  </header>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Test × Nacht</h2>
+        <div class="hint" id="matrixHint"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="controls" style="margin-bottom:14px">
+      <button class="tbtn" type="button" id="modeChanged" aria-pressed="true">nur auffällige Tests</button>
+      <button class="tbtn" type="button" id="modeAll" aria-pressed="false">alle 214 Tests</button>
+      <span class="hint" id="modeHint"></span>
+    </div>
+
+    <div class="summary-wrap scroll-x" id="summaryWrap">
+      <svg id="summary" role="img" aria-label="Release und Ergebnissumme je Nacht"></svg>
+    </div>
+    <div class="matrix-scroll" id="matrixScroll">
+      <svg id="matrix" role="img" aria-label="Testergebnisse als Matrix aus Test und Nacht"></svg>
+    </div>
+
+    <details class="tableview">
+      <summary>Tabellenansicht: Läufe und Wechsel je Test</summary>
+      <div class="wrap"><table class="data" id="runTable"></table></div>
+    </details>
+  </section>
+
+  <div class="split">
+    <section class="panel">
+      <div class="selhead">
+        <span class="eyebrow">Commits seit dem letzten Lauf</span>
+        <span class="run-id mono" id="selDate1"></span>
+      </div>
+      <div id="commits"></div>
+    </section>
+    <section class="panel">
+      <div class="selhead">
+        <span class="eyebrow">Status-Wechsel</span>
+        <span class="run-id mono" id="selDate2"></span>
+      </div>
+      <div id="changes"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/;
+</script>
+<script>
+/*__CORE__*/
+
+const LEG = [["P", "sw-pass"], ["p", "sw-passtag"], ["f", "sw-known"], ["F", "sw-new"]];
+document.getElementById("legend").innerHTML = LEG.map(([c, cls]) =>
+  `<span class="legend-item"><span class="swatch ${cls}"></span>${CAT[c].label}</span>`).join("")
+  + `<span class="legend-item"><span class="swatch" style="background:var(--axis)"></span>nicht im Lauf</span>`;
+
+/* ------------------------------------------------ Kennzahlen je Testzeile */
+const N = TESTS.length;
+const FLIPS = new Array(N).fill(0);   // Anzahl Statuswechsel ueber die Historie
+const EVER_FAIL = new Array(N).fill(false);
+for (let t = 0; t < N; t++) {
+  for (let i = 1; i < RUNS.length; i++) {
+    if (RUNS[i].s[t] !== RUNS[i - 1].s[t]) FLIPS[t]++;
+  }
+  EVER_FAIL[t] = [...RUNS].some((r) => FAILISH.includes(r.s[t]));
+}
+const CHANGED = [...TESTS.keys()].filter((t) => FLIPS[t] > 0)
+  .sort((a, b) => FLIPS[b] - FLIPS[a] || TESTS[a].suite.localeCompare(TESTS[b].suite));
+const ALL_BY_SUITE = [...TESTS.keys()]
+  .sort((a, b) => TESTS[a].suite.localeCompare(TESTS[b].suite) || FLIPS[b] - FLIPS[a]);
+
+/* ------------------------------------------------------------ Geometrie */
+const COL = 11, LABEL_W = 360, NAME_W = 205, FLIP_W = 58;
+/* Zeichenbudget statt Clipping: ein abgeschnittenes Label ist ein Fehler, ein
+   gekuerztes mit Ellipse eine Entscheidung. Vollstaendig steht es im Tooltip. */
+const ellipsis = (t, max) => (t.length <= max ? t : t.slice(0, max - 1) + "…");
+const GRID_W = RUNS.length * COL;
+const W = LABEL_W + GRID_W + FLIP_W;
+
+let dense = false;
+let sel = RUNS.length - 1;
+
+/* ------------------------------------- Kopfzeile: Release + Ergebnissumme */
+const SUM_H = 58, BAND_H = 22, DATE_H = 18;
+function renderSummary() {
+  const svg = document.getElementById("summary");
+  svg.innerHTML = "";
+  const H = BAND_H + SUM_H + DATE_H;
+  svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  svg.appendChild(el("text", { x: LABEL_W - 10, y: BAND_H - 7, "text-anchor": "end",
+    fill: "var(--muted)", "font-size": 10, "font-family": "IBM Plex Mono, monospace",
+    text: "Release" }));
+  VSPANS.forEach((sp) => {
+    const x0 = LABEL_W + sp.start * COL, x1 = LABEL_W + (sp.end + 1) * COL;
+    const ci = Math.min(sp.idx, VCOLORS.length - 1);
+    svg.appendChild(el("rect", { x: x0 + 1, y: 2, width: x1 - x0 - 2, height: BAND_H - 8,
+      fill: `var(${VCOLORS[ci]})`, rx: 2 }));
+    if (x1 - x0 > 66) {
+      svg.appendChild(el("text", { x: x0 + 7, y: BAND_H - 8, fill: `var(${VINKS[ci]})`,
+        "font-size": 10.5, "font-weight": 500,
+        "font-family": "IBM Plex Mono, monospace", text: sp.version }));
+    }
+  });
+
+  /* Summenstreifen: dieselben vier Kategorien, nur als Anteil je Nacht */
+  const y0 = BAND_H, maxT = Math.max(...COUNTS.map((c) => c.total));
+  svg.appendChild(el("text", { x: LABEL_W - 10, y: y0 + 14, "text-anchor": "end",
+    fill: "var(--muted)", "font-size": 10, "font-family": "IBM Plex Mono, monospace",
+    text: "Summe" }));
+  RUNS.forEach((r, i) => {
+    const c = COUNTS[i];
+    let acc = 0;
+    STACK.forEach((code, k) => {
+      const v = c[code];
+      if (!v) return;
+      const hTot = (c.total / maxT) * SUM_H;
+      const yB = y0 + SUM_H - (acc / c.total) * hTot;
+      const yT = y0 + SUM_H - ((acc + v) / c.total) * hTot;
+      let h = yB - yT;
+      if (k > 0 && h > 3) h -= 2;
+      svg.appendChild(el("rect", { x: LABEL_W + i * COL + 1, y: yT,
+        width: COL - 2, height: Math.max(1, h), fill: `var(${CAT[code].varName})` }));
+      acc += v;
+    });
+    const hit = el("rect", { x: LABEL_W + i * COL, y: 0, width: COL, height: BAND_H + SUM_H,
+      fill: "transparent", class: "bar-hit" });
+    hit.addEventListener("mouseenter", (e) => showTip(runTipHtml(i), e));
+    hit.addEventListener("mousemove", moveTip);
+    hit.addEventListener("mouseleave", hideTip);
+    hit.addEventListener("click", () => { sel = i; renderDetail(); renderSummary(); });
+    svg.appendChild(hit);
+  });
+  svg.appendChild(el("rect", { x: LABEL_W + sel * COL, y: 0, width: COL, height: BAND_H + SUM_H,
+    fill: "none", stroke: "var(--ink)", "stroke-width": 1, opacity: 0.5 }));
+
+  svg.appendChild(el("text", { x: W - 8, y: BAND_H + SUM_H + 13, "text-anchor": "end",
+    fill: "var(--muted)", "font-size": 10, "font-family": "IBM Plex Mono, monospace",
+    text: "Wechsel" }));
+  RUNS.forEach((r, i) => {
+    if (i % 7 !== 0) return;
+    svg.appendChild(el("text", { x: LABEL_W + i * COL + COL / 2, y: BAND_H + SUM_H + 13,
+      "text-anchor": "middle", fill: "var(--muted)", "font-size": 10,
+      "font-family": "IBM Plex Mono, monospace", text: fmtDate(r.run_id) }));
+  });
+}
+
+/* -------------------------------------------------------------- Matrix */
+function renderMatrix() {
+  const svg = document.getElementById("matrix");
+  svg.innerHTML = "";
+  const rows = dense ? ALL_BY_SUITE : CHANGED;
+  const RH = dense ? 5 : 17;
+  const H = rows.length * RH + 8;
+  svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  let lastSuite = null;
+  rows.forEach((t, ri) => {
+    const y = 4 + ri * RH;
+    const test = TESTS[t];
+
+    if (!dense) {
+      svg.appendChild(el("text", { x: 0, y: y + RH - 5, fill: "var(--ink-2)",
+        "font-size": 11.5, "font-family": "IBM Plex Mono, monospace",
+        text: ellipsis(test.name, Math.floor(NAME_W / 6.9)) }));
+      svg.appendChild(el("text", { x: LABEL_W - 12, y: y + RH - 5, "text-anchor": "end",
+        fill: "var(--muted)", "font-size": 9.5,
+        "font-family": "IBM Plex Mono, monospace", text: ellipsis(test.suite, 26) }));
+    } else if (test.suite !== lastSuite) {
+      lastSuite = test.suite;
+      svg.appendChild(el("text", { x: LABEL_W - 12, y: y + 5, "text-anchor": "end",
+        fill: "var(--ink-2)", "font-size": 10.5,
+        "font-family": "IBM Plex Mono, monospace", text: test.suite }));
+      svg.appendChild(el("line", { x1: LABEL_W, x2: LABEL_W + GRID_W, y1: y - 1, y2: y - 1,
+        stroke: "var(--grid)", "stroke-width": 1 }));
+    }
+
+    RUNS.forEach((r, i) => {
+      const code = r.s[t];
+      const fill = code === "-" ? "var(--axis)" : `var(${CAT[code].varName})`;
+      const cell = el("rect", { x: LABEL_W + i * COL + 1, y, width: COL - 2,
+        height: RH - 2, fill, rx: 1 });
+      if (!dense) {
+        cell.addEventListener("mouseenter", (e) => showTip(cellTip(t, i), e));
+        cell.addEventListener("mousemove", moveTip);
+        cell.addEventListener("mouseleave", hideTip);
+        cell.addEventListener("click", () => { sel = i; renderDetail(); renderSummary(); });
+        cell.style.cursor = "pointer";
+      }
+      svg.appendChild(cell);
+    });
+
+    if (!dense) {
+      svg.appendChild(el("text", { x: W - 8, y: y + RH - 5, "text-anchor": "end",
+        fill: "var(--muted)", "font-size": 10.5,
+        "font-family": "IBM Plex Mono, monospace", text: String(FLIPS[t]) }));
+    }
+  });
+
+  document.getElementById("matrixHint").textContent = dense
+    ? `alle ${N} Tests, nach Suite gruppiert · ${RUNS.length} Nächte`
+    : `${CHANGED.length} von ${N} Tests haben ihr Ergebnis mindestens einmal geändert · Spalte rechts: Anzahl Wechsel`;
+  document.getElementById("modeHint").textContent = dense
+    ? "Zeilenhöhe 5 px – für das Gesamtmuster, nicht zum Lesen einzelner Namen"
+    : "sortiert nach Instabilität, wackeligste Tests oben";
+}
+
+function cellTip(t, i) {
+  const r = RUNS[i], code = r.s[t], test = TESTS[t];
+  const prev = i > 0 ? RUNS[i - 1].s[t] : null;
+  const label = code === "-" ? "nicht im Lauf" : CAT[code].label;
+  const prevLabel = prev == null ? "–" : (prev === "-" ? "nicht im Lauf" : CAT[prev].label);
+  return `<div class="tip-title"><span>${test.name}</span></div>
+    <dl><dt>Suite</dt><dd>${test.suite}</dd>
+    <dt>Nacht</dt><dd>${fmtDate(r.run_id)}</dd>
+    <dt>Status</dt><dd>${label}</dd>
+    <dt>Vornacht</dt><dd>${prevLabel}</dd>
+    <dt>Wechsel gesamt</dt><dd>${FLIPS[t]}</dd></dl>`;
+}
+
+/* -------------------------------------------------------------- Detail */
+function renderDetail() {
+  const r = RUNS[sel], d = DIFFS[sel], prev = sel > 0 ? RUNS[sel - 1] : null;
+  document.getElementById("selDate1").textContent = fmtDateLong(r.run_id);
+  document.getElementById("selDate2").textContent = fmtDateLong(r.run_id);
+
+  const ch = document.getElementById("commits");
+  ch.innerHTML = r.commits.length
+    ? r.commits.map((c) => `<div class="list-row">
+        <span class="sha mono">${c.sha.slice(0, 7)}</span>
+        <span>${c.subject}<div class="meta mono">${c.author}</div></span></div>`).join("")
+    : `<div class="empty">${prev ? "Keine neuen Commits seit dem letzten Lauf." : "Erster Lauf."}</div>`;
+
+  const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
+  const rows = [];
+  order.forEach((k) => (d[k] || []).forEach((e) => rows.push([k, e])));
+  const cl = document.getElementById("changes");
+  cl.innerHTML = rows.length
+    ? rows.slice(0, 40).map(([k, e]) => `<div class="list-row">
+        <span class="chip"><span class="dot" style="background:var(${DIFF_META[k].varName})"></span>${DIFF_META[k].label}</span>
+        <span><span class="mono" style="font-size:12.5px">${e.test.name}</span>
+        <div class="meta mono">${e.test.suite}</div></span></div>`).join("")
+      + (rows.length > 40 ? `<div class="empty">… und ${rows.length - 40} weitere</div>` : "")
+    : `<div class="empty">${prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf."}</div>`;
+}
+
+/* --------------------------------------------------------------- Rest */
+function renderTable() {
+  const head = `<thead><tr><th>Test</th><th>Suite</th><th>Wechsel</th><th>zuletzt</th>
+    <th>Fails gesamt</th></tr></thead>`;
+  const body = [...ALL_BY_SUITE].sort((a, b) => FLIPS[b] - FLIPS[a]).map((t) => {
+    const last = RUNS[RUNS.length - 1].s[t];
+    const fails = RUNS.reduce((n, r) => n + (FAILISH.includes(r.s[t]) ? 1 : 0), 0);
+    return `<tr><td class="txt mono">${TESTS[t].name}</td>
+      <td class="txt mono">${TESTS[t].suite}</td><td>${FLIPS[t]}</td>
+      <td>${last === "-" ? "nicht im Lauf" : CAT[last].label}</td><td>${fails}</td></tr>`;
+  }).join("");
+  document.getElementById("runTable").innerHTML = head + "<tbody>" + body + "</tbody>";
+}
+
+document.getElementById("modeChanged").addEventListener("click", () => setMode(false));
+document.getElementById("modeAll").addEventListener("click", () => setMode(true));
+function setMode(d) {
+  dense = d;
+  document.getElementById("modeChanged").setAttribute("aria-pressed", String(!d));
+  document.getElementById("modeAll").setAttribute("aria-pressed", String(d));
+  renderMatrix();
+}
+
+/* Kopfzeile und Matrix teilen sich die Spaltenbreite - horizontal gekoppelt */
+const mScroll = document.getElementById("matrixScroll");
+const sWrap = document.getElementById("summaryWrap");
+mScroll.addEventListener("scroll", () => { sWrap.scrollLeft = mScroll.scrollLeft; });
+
+renderSummary();
+renderMatrix();
+renderDetail();
+renderTable();
+</script>

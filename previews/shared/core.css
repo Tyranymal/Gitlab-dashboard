@@ -1,0 +1,279 @@
+/* Gemeinsame Tokens und Basis-Typografie der drei Vorschau-Layouts.
+   Alle Farben sind hier als Custom Properties definiert; die Layouts greifen
+   ausschliesslich ueber Rollen darauf zu, damit Light/Dark an einer Stelle
+   umschaltet. */
+
+:root {
+  color-scheme: light;
+
+  /* Flaechen und Schrift - leicht kuehl-neutral, passend zu einer
+     Messtechnik-/CI-Oberflaeche */
+  --page:        #f3f4f2;
+  --surface:     #fcfcfb;
+  --surface-2:   #f5f6f4;
+  --ink:         #0b0b0b;
+  --ink-2:       #52514e;
+  --muted:       #898781;
+  --grid:        #e1e0d9;
+  --axis:        #c3c2b7;
+  --border:      rgba(11, 11, 11, 0.10);
+  --border-hard: rgba(11, 11, 11, 0.18);
+  --accent:      #2a78d6;
+  --shadow:      0 1px 2px rgba(11, 11, 11, 0.05);
+
+  /* Status der vier Balkensegmente. Reihenfolge im Stapel von unten nach oben:
+     pass -> pass+Tag -> bekannter Fail -> neuer Fail. Diese Abfolge ist mit
+     validate_palette.js geprueft (CVD- und Normalsicht-Trennung in beiden
+     Modi bestanden). */
+  --st-pass:     #0ca30c;
+  --st-passtag:  #fab219;
+  --st-known:    #4a3aa7;
+  --st-new:      #d03b3b;
+
+  /* Release-Versionen sind geordnet, also ein Ein-Hue-Ramp statt bunter
+     Kategorien - so kollidiert das Versionsband nie mit den Statusfarben. */
+  --v1: #86b6ef;
+  --v2: #3987e5;
+  --v3: #1c5cab;
+  --v4: #104281;
+  --v-ink-1: #0b0b0b;
+  --v-ink-2: #ffffff;
+  --v-ink-3: #ffffff;
+  --v-ink-4: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page:        #0d0d0d;
+    --surface:     #1a1a19;
+    --surface-2:   #212120;
+    --ink:         #ffffff;
+    --ink-2:       #c3c2b7;
+    --muted:       #898781;
+    --grid:        #2c2c2a;
+    --axis:        #383835;
+    --border:      rgba(255, 255, 255, 0.10);
+    --border-hard: rgba(255, 255, 255, 0.20);
+    --accent:      #3987e5;
+    --shadow:      none;
+    --st-pass:     #0ca30c;
+    --st-passtag:  #fab219;
+    --st-known:    #9085e9;
+    --st-new:      #e66767;
+    --v1: #b7d3f6;
+    --v2: #86b6ef;
+    --v3: #3987e5;
+    --v4: #256abf;
+    --v-ink-1: #0b0b0b;
+    --v-ink-2: #0b0b0b;
+    --v-ink-3: #0b0b0b;
+    --v-ink-4: #ffffff;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page:        #0d0d0d;
+  --surface:     #1a1a19;
+  --surface-2:   #212120;
+  --ink:         #ffffff;
+  --ink-2:       #c3c2b7;
+  --muted:       #898781;
+  --grid:        #2c2c2a;
+  --axis:        #383835;
+  --border:      rgba(255, 255, 255, 0.10);
+  --border-hard: rgba(255, 255, 255, 0.20);
+  --accent:      #3987e5;
+  --shadow:      none;
+  --st-pass:     #0ca30c;
+  --st-passtag:  #fab219;
+  --st-known:    #9085e9;
+  --st-new:      #e66767;
+  --v1: #b7d3f6;
+  --v2: #86b6ef;
+  --v3: #3987e5;
+  --v4: #256abf;
+  --v-ink-1: #0b0b0b;
+  --v-ink-2: #0b0b0b;
+  --v-ink-3: #0b0b0b;
+  --v-ink-4: #ffffff;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono, code, .sha, .run-id {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 21px; }
+h2 { font-size: 15px; }
+h3 { font-size: 13px; }
+
+a { color: var(--accent); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Eyebrow-Label: Kapitaelchen-Ersatz in Mono, das Vokabular der Oberflaeche */
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.shell {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.topbar .sub { color: var(--ink-2); max-width: 62ch; margin-top: 4px; }
+
+.variant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-hard);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.scroll-x { overflow-x: auto; overflow-y: hidden; }
+
+/* Legende - immer sichtbar, Identitaet haengt nie allein an der Farbe */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.legend-item { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-2); }
+.swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+.sw-pass    { background: var(--st-pass); }
+.sw-passtag { background: var(--st-passtag); }
+.sw-known   { background: var(--st-known); }
+.sw-new     { background: var(--st-new); }
+
+/* Tooltip */
+.tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-hard);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  padding: 10px 12px;
+  font-size: 12px;
+  min-width: 190px;
+  opacity: 0;
+  transition: opacity 90ms linear;
+}
+.tip[data-open="1"] { opacity: 1; }
+.tip .tip-title { font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 12px; }
+.tip dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+.tip dt { color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.tip dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", monospace; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* Tabellenansicht - die Pflicht-Alternative zur Farbe */
+table.data { border-collapse: collapse; width: 100%; font-size: 12px; }
+table.data th, table.data td {
+  text-align: right;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--grid);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+table.data th { color: var(--muted); font-weight: 500; text-align: right; }
+table.data th:first-child, table.data td:first-child { text-align: left; }
+table.data td.txt { text-align: left; white-space: normal; }
+
+details.tableview { margin-top: 14px; }
+details.tableview > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-2);
+  padding: 4px 0;
+  list-style: none;
+}
+details.tableview > summary::-webkit-details-marker { display: none; }
+details.tableview > summary::before { content: "▸ "; color: var(--muted); }
+details.tableview[open] > summary::before { content: "▾ "; }
+details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; border: 1px solid var(--grid); }
+
+/* Chips fuer Diff-Kategorien: Form + Text, nicht nur Farbe */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: "IBM Plex Mono", monospace;
+  border: 1px solid var(--border-hard);
+  padding: 1px 7px;
+  border-radius: 3px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+.muted { color: var(--muted); }
+.ink2  { color: var(--ink-2); }
+.tnum  { font-variant-numeric: tabular-nums; }
+
+/* Zwischenzeile zwischen Haupt- und Nebendiagramm (Variante A) */
+.submicro {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0 2px 54px;
+  border-top: 1px solid var(--grid);
+  margin-top: 6px;
+}

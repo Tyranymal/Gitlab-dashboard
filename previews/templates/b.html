@@ -1,0 +1,474 @@
+<title>Nightly Runbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/*__CSS__*/
+
+.workspace {
+  display: grid;
+  grid-template-columns: 316px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1000px) { .workspace { grid-template-columns: 1fr; } }
+
+/* --- Laufliste links --------------------------------------------------- */
+.runlist { padding: 0; overflow: hidden; }
+.runlist-head {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--grid);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
+.runlist-scroll { max-height: 660px; overflow-y: auto; }
+.run-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--grid);
+  border-left: 3px solid transparent;
+  padding: 9px 14px 10px 13px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.run-row:hover { background: var(--surface-2); }
+.run-row[aria-current="true"] { border-left-color: var(--accent); background: var(--surface-2); }
+.run-row .d { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
+.run-row .spark { grid-column: 1 / -1; margin-top: 3px; }
+.run-row .badges { grid-column: 1 / -1; display: flex; gap: 5px 9px; flex-wrap: wrap; margin-top: 5px; }
+.mini-badge {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px;
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--ink-2);
+}
+.mini-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.quiet { font-size: 10.5px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+
+/* Ein Kaestchen je Service: gefüllt = Version hat sich in dieser Nacht geändert */
+.pips { display: inline-flex; gap: 2px; align-items: center; }
+.pip { width: 7px; height: 12px; border-radius: 1px; background: var(--grid); }
+.pip.on { background: var(--accent); }
+
+/* --- Detail rechts ------------------------------------------------------ */
+.detail-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+  padding-bottom: 16px; border-bottom: 1px solid var(--grid);
+}
+.detail-head h2 { font-size: 24px; letter-spacing: -0.02em; }
+.detail-head .meta { color: var(--ink-2); font-size: 12.5px; margin-top: 4px; }
+.detail-head .meta .mono { color: var(--muted); }
+
+.statstrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--grid);
+  margin: 16px 0 4px;
+}
+.stat { background: var(--surface); padding: 12px 14px 12px 0; }
+.stat:not(:first-child) { padding-left: 14px; }
+.stat .k { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-2); }
+.stat .n { font-size: 26px; font-weight: 600; line-height: 1.15; margin-top: 2px; }
+.stat .sub { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .statstrip { grid-template-columns: repeat(2, 1fr); } }
+
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  margin: 24px 0 10px; padding-top: 18px; border-top: 1px solid var(--grid);
+}
+.section-head:first-of-type { border-top: none; padding-top: 0; }
+
+/* Versionsstand: je Service eine Zeile, geänderte zuerst */
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(262px, 1fr));
+  gap: 0 26px;
+}
+.svc {
+  padding: 9px 4px 9px 11px;
+  border-bottom: 1px solid var(--grid);
+  border-left: 3px solid transparent;
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline;
+}
+.svc.changed { border-left-color: var(--accent); }
+.svc .n { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+.svc .v { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 500; }
+.svc .was {
+  grid-column: 1 / -1;
+  font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--muted);
+}
+.svc .was .arrow { color: var(--muted); padding: 0 3px; }
+.bumptag {
+  font-family: "IBM Plex Mono", monospace; font-size: 10px;
+  border: 1px solid var(--border-hard); border-radius: 2px;
+  padding: 0 4px; color: var(--ink-2); margin-left: 6px;
+}
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.fbtn {
+  font: inherit; font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--border-hard); border-radius: 3px;
+  padding: 3px 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.fbtn:hover { background: var(--surface-2); }
+.fbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.fbtn[aria-pressed="true"] .cnt { color: var(--surface); opacity: 0.75; }
+.fbtn .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.fbtn .cnt { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+table.changes { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+table.changes th {
+  text-align: left; font-weight: 500; font-size: 11px; color: var(--muted);
+  padding: 0 12px 6px 0; border-bottom: 1px solid var(--grid); white-space: nowrap;
+}
+table.changes td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
+table.changes td.name { font-family: "IBM Plex Mono", monospace; }
+table.changes td.suite { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+table.changes td.transition { white-space: nowrap; }
+.stat-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-2); }
+.stat-dot .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.arrow { color: var(--muted); padding: 0 4px; }
+
+.commit-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--grid); }
+.commit-row:last-child { border-bottom: none; }
+.commit-row .sha { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); }
+.commit-row .who { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); }
+.empty { color: var(--muted); font-size: 12.5px; padding: 12px 0; }
+.hint { font-size: 11.5px; color: var(--muted); }
+</style>
+
+<div class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Robot Framework · Nachtlauf</div>
+      <h1>Nightly Runbook</h1>
+      <p class="sub">Links jede Nacht als Zeile, rechts die ausgewählte Nacht vollständig:
+        welche Services in neuer Version liefen, was sich am Testergebnis geändert hat,
+        welche Commits dazukamen. Gedacht als Morgen-Arbeitsliste – oben durch, unten fertig.</p>
+    </div>
+    <div class="variant-tag">Variante B · Master / Detail</div>
+  </header>
+
+  <div class="workspace">
+    <section class="panel runlist">
+      <div class="runlist-head">
+        <h2>Nachtläufe</h2>
+        <span class="quiet" id="runCount"></span>
+      </div>
+      <div class="runlist-scroll" id="runlist" role="listbox" aria-label="Nachtläufe"></div>
+    </section>
+
+    <section class="panel">
+      <div class="detail-head">
+        <div>
+          <div class="eyebrow" id="dRel"></div>
+          <h2 id="dDate">–</h2>
+          <div class="meta" id="dMeta"></div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="statstrip" id="stats"></div>
+
+      <div class="section-head">
+        <h3>Versionsstand der Services</h3>
+        <span class="hint" id="svcHint"></span>
+      </div>
+      <div class="svc-grid" id="svcGrid"></div>
+
+      <div class="section-head">
+        <h3>Status-Wechsel gegenüber dem vorherigen Lauf</h3>
+        <span class="hint" id="diffHint"></span>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="scroll-x">
+        <table class="changes" id="changeTable"></table>
+      </div>
+      <div class="empty" id="changeEmpty" hidden></div>
+
+      <div class="section-head">
+        <h3>Commits im Robot-Repo seit dem letzten Lauf</h3>
+        <span class="quiet" id="shaRange"></span>
+      </div>
+      <div id="commits"></div>
+
+      <details class="tableview">
+        <summary>Alle Läufe als Tabelle</summary>
+        <div class="wrap"><table class="data" id="runTable"></table></div>
+      </details>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Versionsverlauf je Service</h2>
+        <div class="hint">Jeder Service springt in seinem eigenen Takt – ein gemeinsames
+          Release gibt es nicht. Abschnitt anklicken, um zur Nacht des Sprungs zu springen.</div>
+      </div>
+      <span class="quiet" id="bumpTotal"></span>
+    </div>
+    <div class="scroll-x">
+      <svg id="lanes" role="img" aria-label="Versionsverlauf je Service über die Nachtläufe"></svg>
+    </div>
+    <details class="tableview">
+      <summary>Versionssprünge als Tabelle</summary>
+      <div class="wrap"><table class="data" id="bumpTable"></table></div>
+    </details>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/;
+</script>
+<script>
+/*__CORE__*/
+
+const LEG = [["P", "sw-pass"], ["p", "sw-passtag"], ["f", "sw-known"], ["F", "sw-new"]];
+document.getElementById("legend").innerHTML = LEG.map(([c, cls]) =>
+  `<span class="legend-item"><span class="swatch ${cls}"></span>${CAT[c].label}</span>`).join("");
+
+let sel = RUNS.length - 1;
+let filter = "all";
+
+/* ------------------------------------------------- Mini-Balken je Zeile */
+function sparkSvg(i, width) {
+  const c = COUNTS[i], H = 8;
+  const svg = el("svg", { width, height: H, viewBox: `0 0 ${width} ${H}`, role: "img",
+    "aria-label": `Pass ${c.P}, Pass mit Tag ${c.p}, bekannte Fails ${c.f}, neue Fails ${c.F}` });
+  let x = 0;
+  STACK.forEach((code, k) => {
+    const v = c[code];
+    if (!v) return;
+    const w = (v / c.total) * width;
+    /* 2px Flaechenluecke zwischen den Segmenten, ohne ein Segment zu verschlucken */
+    const drawn = k < 3 && w > 3 ? w - 2 : w;
+    svg.appendChild(el("rect", { x, y: 0, width: Math.max(1, drawn), height: H,
+      fill: `var(${CAT[code].varName})`, rx: 1 }));
+    x += w;
+  });
+  return svg;
+}
+
+/* ---------------------------------------------------------- Laufliste */
+function renderList() {
+  const host = document.getElementById("runlist");
+  host.innerHTML = "";
+  document.getElementById("runCount").textContent = RUNS.length + " Läufe";
+  for (let i = RUNS.length - 1; i >= 0; i--) {
+    const r = RUNS[i], c = COUNTS[i], d = DIFFS[i], cd = CDIFFS[i];
+    const row = el("button", { class: "run-row", type: "button", role: "option",
+      "aria-current": String(i === sel) });
+
+    /* Ein Pip je Service - gefuellt, wenn dieser Service in dieser Nacht sprang */
+    const changed = new Set(cd.map((x) => x.name));
+    const pips = SERVICES.map((s) =>
+      `<span class="pip ${changed.has(s) ? "on" : ""}" title="${s}"></span>`).join("");
+    row.innerHTML = `<span class="d">${fmtDate(r.run_id)}</span>
+      <span class="pips" role="img"
+        aria-label="${changed.size} von ${SERVICES.length} Services mit neuer Version">${pips}</span>`;
+
+    const spark = el("span", { class: "spark" });
+    spark.appendChild(sparkSvg(i, 272));
+    row.appendChild(spark);
+
+    const badges = [];
+    if (c.F) badges.push(`<span class="mini-badge"><span class="dot" style="background:var(--st-new)"></span>${c.F} neu</span>`);
+    if (d.regression && d.regression.length) badges.push(`<span class="mini-badge">▲ ${d.regression.length} Regression</span>`);
+    if (d.fixed && d.fixed.length) badges.push(`<span class="mini-badge">▼ ${d.fixed.length} gefixt</span>`);
+    if (cd.length) badges.push(`<span class="mini-badge">${cd.length} Service-Update${cd.length === 1 ? "" : "s"}</span>`);
+    if (r.commits.length) badges.push(`<span class="mini-badge">${r.commits.length} Commit${r.commits.length === 1 ? "" : "s"}</span>`);
+    if (!badges.length) badges.push(`<span class="mini-badge muted">unverändert</span>`);
+    row.appendChild(el("span", { class: "badges", html: badges.join("") }));
+
+    row.addEventListener("click", () => { sel = i; filter = "all"; renderAll(); });
+    host.appendChild(row);
+  }
+}
+
+/* -------------------------------------------------------------- Detail */
+function renderDetail() {
+  const r = RUNS[sel], c = COUNTS[sel], d = DIFFS[sel], cd = CDIFFS[sel];
+  const prev = sel > 0 ? RUNS[sel - 1] : null;
+
+  document.getElementById("dRel").textContent = cd.length
+    ? `${cd.length} Service${cd.length === 1 ? "" : "s"} in neuer Version`
+    : "Kein Service-Update gegenüber dem vorherigen Lauf";
+  document.getElementById("dDate").textContent = fmtDateLong(r.run_id);
+  document.getElementById("dMeta").innerHTML =
+    `${c.total} Tests · Laufzeit ${fmtDuration(r.elapsed_s)} ·
+     <span class="mono">Pipeline #${r.pipeline_id}</span> ·
+     <span class="mono">${r.sha.slice(0, 7)}</span>`;
+
+  document.getElementById("stats").innerHTML = STACK.map((code) => `
+    <div class="stat">
+      <span class="k"><span class="swatch sw-${CAT[code].key}"></span>${CAT[code].label}</span>
+      <div class="n tnum">${c[code]}</div>
+      <div class="sub">${pct(c[code], c.total)} der Tests</div>
+    </div>`).join("");
+
+  /* Versionsstand: geaenderte Services zuerst, danach der Rest */
+  const changedMap = Object.fromEntries(cd.map((x) => [x.name, x]));
+  const ordered = [...SERVICES].sort((a, b) => (changedMap[b] ? 1 : 0) - (changedMap[a] ? 1 : 0));
+  document.getElementById("svcHint").textContent =
+    `Quelle: ${r.version_source === "metadata" ? "Suite-Metadata" : "Suite-Dokumentation"}`;
+  document.getElementById("svcGrid").innerHTML = ordered.map((name) => {
+    const ch = changedMap[name];
+    return `<div class="svc ${ch ? "changed" : ""}">
+      <span class="n">${name}</span>
+      <span class="v">${r.components[name]}${ch ? `<span class="bumptag">${ch.kind}</span>` : ""}</span>
+      ${ch ? `<span class="was">vorher ${ch.from}<span class="arrow">→</span>${ch.to}</span>` : ""}
+    </div>`;
+  }).join("");
+
+  /* Filterleiste und Wechseltabelle */
+  const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
+  document.getElementById("diffHint").textContent = prev
+    ? "Referenz: " + fmtDateLong(prev.run_id) : "kein vorheriger Lauf";
+  const fbtns = [`<button class="fbtn" type="button" data-f="all" aria-pressed="${filter === "all"}">
+      alle Wechsel <span class="cnt">${d.changed || 0}</span></button>`];
+  order.forEach((k) => {
+    const n = (d[k] || []).length;
+    if (!n) return;
+    fbtns.push(`<button class="fbtn" type="button" data-f="${k}" aria-pressed="${filter === k}">
+      <span class="dot" style="background:var(${DIFF_META[k].varName})"></span>${DIFF_META[k].label}
+      <span class="cnt">${n}</span></button>`);
+  });
+  const fhost = document.getElementById("filters");
+  fhost.innerHTML = fbtns.join("");
+  fhost.querySelectorAll(".fbtn").forEach((b) =>
+    b.addEventListener("click", () => { filter = b.dataset.f; renderDetail(); }));
+
+  const rows = [];
+  order.forEach((k) => {
+    if (filter !== "all" && filter !== k) return;
+    (d[k] || []).forEach((e) => rows.push([k, e]));
+  });
+  const table = document.getElementById("changeTable");
+  const emptyBox = document.getElementById("changeEmpty");
+  if (!rows.length) {
+    table.innerHTML = "";
+    emptyBox.hidden = false;
+    emptyBox.textContent = prev
+      ? "Kein Test hat sein Ergebnis gegenüber dem vorherigen Lauf geändert."
+      : "Erster Lauf der Historie – es gibt keine Vergleichsbasis.";
+  } else {
+    emptyBox.hidden = true;
+    const cell = (code) => code === "-"
+      ? `<span class="stat-dot muted">nicht im Lauf</span>`
+      : `<span class="stat-dot"><span class="dot" style="background:var(${CAT[code].varName})"></span>${CAT[code].label}</span>`;
+    table.innerHTML =
+      `<thead><tr><th>Test</th><th>Suite</th><th>vorher → nachher</th><th>Einordnung</th></tr></thead><tbody>` +
+      rows.map(([k, e]) => `<tr>
+        <td class="name">${e.test.name}</td>
+        <td class="suite">${e.test.suite}</td>
+        <td class="transition">${cell(e.from)}<span class="arrow">→</span>${cell(e.to)}</td>
+        <td><span class="chip"><span class="dot" style="background:var(${DIFF_META[k].varName})"></span>${DIFF_META[k].label}</span></td>
+      </tr>`).join("") + "</tbody>";
+  }
+
+  document.getElementById("shaRange").textContent = prev
+    ? prev.sha.slice(0, 7) + " … " + r.sha.slice(0, 7) : "erster Lauf";
+  const ch = document.getElementById("commits");
+  ch.innerHTML = r.commits.length
+    ? r.commits.map((c2) => `<div class="commit-row">
+        <span class="sha">${c2.sha.slice(0, 7)}</span>
+        <span>${c2.subject}</span>
+        <span class="who">${c2.author}</span></div>`).join("")
+    : `<div class="empty">Keine neuen Commits – Änderungen kommen aus den Services, nicht aus den Tests.</div>`;
+}
+
+/* ------------------------------------------------- Versionsverlauf-Lanes */
+const LCOL = 12, LLABEL = 152, LROW = 24, LPADT = 22;
+const LW = LLABEL + RUNS.length * LCOL + 40;
+
+function renderLanes() {
+  const svg = document.getElementById("lanes");
+  svg.innerHTML = "";
+  const H = LPADT + SERVICES.length * LROW + 6;
+  svg.setAttribute("width", LW); svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", `0 0 ${LW} ${H}`);
+
+  RUNS.forEach((r, i) => {
+    if (i % 7 !== 0 && i !== RUNS.length - 1) return;
+    if (i !== RUNS.length - 1 && i > RUNS.length - 5) return;
+    svg.appendChild(el("text", { x: LLABEL + i * LCOL + LCOL / 2, y: 13,
+      "text-anchor": "middle", fill: "var(--muted)", "font-size": 10,
+      "font-family": "IBM Plex Mono, monospace", text: fmtDate(r.run_id) }));
+  });
+
+  SERVICES.forEach((name, si) => {
+    const y = LPADT + si * LROW;
+    svg.appendChild(el("text", { x: LLABEL - 12, y: y + LROW / 2 + 4, "text-anchor": "end",
+      fill: "var(--ink-2)", "font-size": 11,
+      "font-family": "IBM Plex Mono, monospace", text: name }));
+
+    VSPANS_BY_SERVICE[name].forEach((sp) => {
+      const x0 = LLABEL + sp.start * LCOL, x1 = LLABEL + (sp.end + 1) * LCOL;
+      /* Ordinaler Ein-Hue-Ramp, zyklisch: benachbarte Abschnitte sind nie gleich,
+         und die Farbe kann nie mit den Statusfarben verwechselt werden. */
+      const ci = sp.idx % VCOLORS.length;
+      const rect = el("rect", { x: x0 + 1, y: y + 3, width: x1 - x0 - 2, height: LROW - 8,
+        fill: `var(${VCOLORS[ci]})`, rx: 2 });
+      rect.style.cursor = "pointer";
+      const span = sp;
+      rect.addEventListener("mouseenter", (e) => showTip(
+        `<div class="tip-title"><span>${name}</span><span class="mono">${span.version}</span></div>
+         <dl><dt>seit</dt><dd>${fmtDate(RUNS[span.start].run_id)}</dd>
+         <dt>bis</dt><dd>${fmtDate(RUNS[span.end].run_id)}</dd>
+         <dt>Nächte</dt><dd>${span.end - span.start + 1}</dd></dl>`, e));
+      rect.addEventListener("mousemove", moveTip);
+      rect.addEventListener("mouseleave", hideTip);
+      rect.addEventListener("click", () => { sel = span.start; filter = "all"; renderAll(); });
+      svg.appendChild(rect);
+
+      if (x1 - x0 > 58) {
+        svg.appendChild(el("text", { x: x0 + 7, y: y + LROW / 2 + 3.5,
+          fill: `var(${VINKS[ci]})`, "font-size": 10.5, "font-weight": 500,
+          "font-family": "IBM Plex Mono, monospace", text: span.version }));
+      }
+    });
+  });
+
+  /* Auswahlmarke: eine Linie durch alle Lanes */
+  const xs = LLABEL + sel * LCOL + LCOL / 2;
+  svg.appendChild(el("line", { x1: xs, x2: xs, y1: LPADT - 6, y2: H - 4,
+    stroke: "var(--ink)", "stroke-width": 1, opacity: 0.55 }));
+
+  const total = SERVICES.reduce((n, s) => n + SERVICE_BUMPS[s], 0);
+  document.getElementById("bumpTotal").textContent =
+    `${total} Versionssprünge über ${RUNS.length} Nächte`;
+}
+
+/* ------------------------------------------------------------ Tabellen */
+function renderTables() {
+  const head = `<thead><tr><th>Nacht</th><th>Service-Updates</th><th>Gesamt</th><th>Pass</th>
+    <th>Pass+Tag</th><th>Fail bekannt</th><th>Fail neu</th><th>Wechsel</th><th>Commits</th></tr></thead>`;
+  document.getElementById("runTable").innerHTML = head + "<tbody>" + RUNS.map((r, i) => {
+    const c = COUNTS[i], d = DIFFS[i];
+    return `<tr><td class="mono">${r.run_id}</td><td>${CDIFFS[i].length}</td>
+      <td>${c.total}</td><td>${c.P}</td><td>${c.p}</td><td>${c.f}</td><td>${c.F}</td>
+      <td>${d.changed || 0}</td><td>${r.commits.length}</td></tr>`;
+  }).reverse().join("") + "</tbody>";
+
+  const rows = [];
+  RUNS.forEach((r, i) => CDIFFS[i].forEach((x) =>
+    rows.push(`<tr><td class="mono">${r.run_id}</td><td class="txt mono">${x.name}</td>
+      <td class="mono">${x.from}</td><td class="mono">${x.to}</td><td>${x.kind}</td></tr>`)));
+  document.getElementById("bumpTable").innerHTML =
+    `<thead><tr><th>Nacht</th><th>Service</th><th>vorher</th><th>nachher</th><th>Art</th></tr></thead>`
+    + "<tbody>" + rows.reverse().join("") + "</tbody>";
+}
+
+function renderAll() { renderList(); renderDetail(); renderLanes(); }
+renderAll();
+renderTables();
+</script>
