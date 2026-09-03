@@ -1,9 +1,11 @@
 # Layout-Vorschauen
 
 Drei Entwürfe für das Nachtlauf-Dashboard, alle auf demselben synthetischen Datensatz.
-Jede Datei ist eigenständig: kein Server, kein CDN, keine Netzwerkanfrage – Doppelklick
-genügt. Das ist keine Bequemlichkeit, sondern Voraussetzung: interne GitLab-Instanzen
-haben im Browser-Kontext oft keinen Internetzugang.
+Jede Datei ist eigenständig: ein File, kein Server, kein Build zum Ansehen – Doppelklick
+genügt. Daten, CSS und JS stecken inline; keine Chart-Library wird nachgeladen. Einzige
+Ausnahme ist der Schriftschnitt IBM Plex von Google Fonts. Wo der Browser den nicht
+erreicht, greifen die Fallback-Stacks und die Seite rendert vollständig in Systemschrift –
+Layout und Farben bleiben, nur die Typografie sieht anders aus.
 
 | Datei | Variante | Stand |
 |---|---|---|
