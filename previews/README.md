@@ -11,6 +11,9 @@ haben im Browser-Kontext oft keinen Internetzugang.
 | `a.html` | Timeline mit Versionsband | eingefroren, einzelne Release-Version |
 | `c.html` | Test-×-Nacht-Matrix | eingefroren, einzelne Release-Version |
 
+Screenshots der drei Varianten liegen unter `screenshots/` – zum Verschicken, wenn der
+Empfaenger die HTML-Dateien nicht selbst oeffnen will.
+
 `a.html` und `c.html` bleiben als Referenz liegen. Sie enthalten ihre Daten inline und
 rendern weiterhin, gehen aber noch von *einer* Release-Version aus – der Annahme, die
 sich als falsch herausgestellt hat. Ihre Templates liegen unter `_archived/`.
@@ -20,6 +23,7 @@ sich als falsch herausgestellt hat. Ihre Templates liegen unter `_archived/`.
 ```bash
 python3 gen_demo.py        # erzeugt demo-data.json
 python3 build_previews.py  # templates/ + shared/ + Daten -> b.html
+node shoot_previews.mjs    # a/b/c.html -> screenshots/*.png (Playwright + Chromium)
 ```
 
 ## Der Datensatz
