@@ -88,6 +88,10 @@ nachtlauf:
       git push -q origin "$STORE_BRANCH"
   artifacts:
     name: "nachtlauf-$CI_PIPELINE_ID"
+    # Auch bei rotem Job: scheitert das Zurueckschreiben der Historie (Token
+    # abgelaufen, Branch inzwischen geschuetzt), ist der Lauf sonst weg. So
+    # liegt er im Artefakt und laesst sich von Hand nachziehen.
+    when: always
     paths:
       - $STORE_DIR
       - rf-out/output.xml

@@ -164,10 +164,51 @@ die geplante Pipeline und `pages` zum Veröffentlichen. Voraussetzungen:
   maskiert und geschützt. Damit schreibt der Nachtlauf die Historie auf den
   Branch `nightly-data` fort. Job-Artefakte verfallen – ein Jahr Historie
   überlebt das nicht.
+
+  Ist die Variable **geschützt**, ist sie nur in Pipelines auf geschützten
+  Branches sichtbar. Der Schedule läuft auf eurem Default-Branch; ist der nicht
+  geschützt, bleibt der Token leer und der Push scheitert mit einem
+  Authentifizierungsfehler, der nicht danach aussieht.
 * **`GIT_DEPTH: "0"`** im Nachtlauf-Job. Die Commit-Liste vergleicht gegen den
   SHA des Vorlaufs; im flachen Standard-Clone liegt der nicht vor, und die Liste
   bliebe still leer.
 * Ein **Pipeline Schedule** (CI/CD → Schedules) für die Nachtzeit.
+
+### Die Historie geht an Merge Requests vorbei
+
+Die Daten werden zwar committet, aber **nie in den Dev-Branch**. Der Nachtlauf
+pusht ausschließlich auf `nightly-data`, einen Branch, der nie gemergt wird und
+nur diesen einen Zweck hat. Damit greift keine Approval-Regel: Freigaben hängen
+an Merge Requests auf geschützte Branches, ein direkter Push auf einen
+ungeschützten Branch läuft daran vorbei. Der Code – `nrd/` und die
+`.gitlab-ci.yml` – geht dagegen ganz normal per MR in den Dev-Branch, mit euren
+zwei Freigaben; danach fasst ihn niemand mehr an, während die Historie täglich
+wächst. Genau deshalb bleibt es bei einem Repo: der Zwang zur Freigabe trifft
+den Code, nicht die Daten.
+
+Zwei Dinge können das trotzdem blockieren, beide in euren Projekteinstellungen:
+
+* **Geschützte Branches mit Platzhalter.** Steht dort ein Muster wie `*`, ist
+  `nightly-data` mitgeschützt und der Token-Push scheitert. Abhilfe: entweder
+  das Muster so fassen, dass `nightly-data` nicht darunterfällt, oder den Branch
+  ausdrücklich schützen und dem Token-Benutzer unter *Allowed to push* das
+  Recht geben.
+* **Push Rules** (Premium) gelten auch für CI-Pushes – etwa erzwungene
+  Commit-Message-Muster oder verpflichtend signierte Commits. Der Bot-Commit
+  muss dazu passen; seine Nachricht steht in der `.gitlab-ci.yml` und lässt
+  sich anpassen.
+
+Verbietet eure Instanz Bot-Pushes ins Repo grundsätzlich, gibt es zwei Auswege,
+beide ohne Schreibrecht am Repository: die Historie als *Generic Package* in die
+Package Registry legen (`CI_JOB_TOKEN` genügt, aber die Versionierung je Nacht
+und das Wiederfinden des jüngsten Pakets müssen dann gelöst werden), oder das
+Artefakt der vorherigen Pipeline über die API ziehen (fragil, weil Artefakte
+verfallen). Beides ist nicht gebaut – sagt Bescheid, wenn es darauf hinausläuft,
+das ist ein überschaubarer Umbau an genau einer Stelle im Job.
+
+Scheitert das Zurückschreiben trotzdem, ist der Lauf nicht verloren: das
+Job-Artefakt wird auch bei rotem Job hochgeladen (`when: always`) und enthält
+`data/` samt `output.xml`, sodass sich die Nacht von Hand nachziehen lässt.
 
 Rote Tests brechen den Job nicht ab: Robot meldet die Zahl der fehlgeschlagenen
 Tests als Exitcode, erst ab 251 ist Robot selbst gescheitert. Genau das prüft
