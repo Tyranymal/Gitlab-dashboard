@@ -28,9 +28,16 @@ zwei Grafiken hin und her zu messen.
 
 Unter dem Diagramm steht eine Datumsleiste. Sie blättert nachtweise (`◀ Nacht`), springt
 von Versionsereignis zu Versionsereignis (`◀◀ Sprung`) und zurück auf die neueste Nacht.
-Alles darunter – Commits, Status-Wechsel, Versionsereignisse – sowie die Kennzahlen oben
+Alles darunter – Commits, Status-Wechsel, Versionswechsel – sowie die Kennzahlen oben
 folgen der Auswahl; ist nicht die neueste Nacht gewählt, sagt das die Kopfzeile der
 Hero-Kachel. Balken anklicken und ← → im fokussierten Diagramm tun dasselbe.
+
+Liegt zum Vorlauf ein Versionswechsel vor, steht er direkt in der Leiste ausgeschrieben –
+„Neue Version gegenüber Mi 02.09.2026: `ingest-service 7.2.1 → 7.3.0` minor" –, sonst
+„Keine Versionsänderung gegenüber …". Dasselbe ausführlich in der Card *Versionswechsel
+zum Vorlauf*. Verglichen wird immer mit dem vorherigen **Lauf**, nicht mit dem Vortag; ist
+dazwischen eine Nacht ausgefallen, steht das als Hinweis daneben, sonst liest man einen
+Zweitagessprung als Änderung über Nacht.
 
 Die Chronik am Seitenende führt jeden der 31 Versionssprünge als eigene Zeile: Nacht,
 Service, `vorher → nachher`, Art des Sprungs und der Abstand zum vorherigen Sprung

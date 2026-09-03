@@ -54,6 +54,22 @@
 .daynav .nav-date { font-size: 15px; font-weight: 600; font-family: "IBM Plex Mono", monospace; }
 .daynav .nav-pos { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .daynav .grow { flex: 1 1 12px; }
+/* Volle Breite unter den Schaltflaechen: was sich zum Vorlauf geaendert hat.
+   Steht dort, weil man es beim Blaettern liest, nicht nachdem man eine Card
+   gesucht hat. */
+.daynav .nav-note {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  padding-top: 9px;
+  margin-top: 2px;
+  border-top: 1px solid var(--grid);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+}
+.daynav .nav-note .b { font-family: "IBM Plex Mono", monospace; }
+.daynav .nav-note .b b { font-weight: 500; }
+.daynav .nav-note .lead { color: var(--muted); }
+.daynav .nav-note .miss { color: var(--ink-2); }
 .navbtn {
   font: inherit; font-size: 12px;
   font-family: "IBM Plex Mono", monospace;
@@ -100,8 +116,10 @@
   display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline;
 }
 .vrow:last-child { border-bottom: none; }
-.vrow .n { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
-.vrow .jump { grid-column: 1 / -1; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-2); }
+.vrow .n { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 500; }
+.vrow .jump { grid-column: 1 / -1; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-2); }
+.vlead { font-size: 12.5px; color: var(--ink-2); padding: 2px 0 10px; }
+.vlead .miss, .empty .miss { display: block; color: var(--muted); font-size: 11.5px; margin-top: 3px; }
 .vrow .arrow, .arrow { color: var(--muted); padding: 0 4px; }
 .bumptag {
   font-family: "IBM Plex Mono", monospace; font-size: 10px;
@@ -204,6 +222,7 @@ table.chron td.gap { color: var(--muted); font-variant-numeric: tabular-nums; }
     <button class="navbtn" type="button" id="navNextEv" title="nächster Versionssprung">Sprung ▶▶</button>
     <span class="grow"></span>
     <button class="navbtn strong" type="button" id="navLatest">zur neuesten Nacht</button>
+    <div class="nav-note" id="navNote"></div>
   </nav>
 
   <div class="split">
@@ -223,7 +242,7 @@ table.chron td.gap { color: var(--muted); font-variant-numeric: tabular-nums; }
     </section>
     <section class="panel">
       <div class="selhead">
-        <span class="eyebrow">Versionsereignisse dieser Nacht</span>
+        <span class="eyebrow">Versionswechsel zum Vorlauf</span>
         <span class="run-id mono" id="selDate3"></span>
       </div>
       <div class="list" id="vevents"></div>
@@ -485,9 +504,31 @@ const NAV = {
     if (t !== null) select(t);
   }));
 
+/* Ein Versionswechsel als Satzstueck: "ingest-service 7.2.1 -> 7.3.0 (minor)" */
+function bumpHtml(x) {
+  return `<span class="b"><b>${x.name}</b> ${x.from}<span class="arrow">→</span>${x.to}` +
+         `<span class="bumptag">${x.kind}</span></span>`;
+}
+
 function renderNav() {
   document.getElementById("navDate").textContent = fmtDateLong(RUNS[sel].run_id);
   document.getElementById("navPos").textContent = `Lauf ${sel + 1} von ${RUNS.length}`;
+
+  /* Liegt zum Vorlauf ein Versionswechsel vor, steht er hier ausgeschrieben -
+     mit Vergleichsdatum, weil der Vorlauf nicht immer der Vortag ist. */
+  const cd = CDIFFS[sel], ref = prevRunLabel(sel);
+  const note = document.getElementById("navNote");
+  if (!cd.length) {
+    note.innerHTML = sel === 0
+      ? `<span class="lead">Erster Lauf der Historie – keine Vergleichsbasis.</span>`
+      : `<span class="lead">Keine Versionsänderung ${ref.text}.</span>`
+        + (ref.note ? `<span class="miss">· ${ref.note}</span>` : "");
+  } else {
+    note.innerHTML =
+      `<span class="lead">${cd.length === 1 ? "Neue Version" : cd.length + " neue Versionen"}
+         ${ref.text}:</span>` + cd.map(bumpHtml).join("")
+      + (ref.note ? `<span class="miss">· ${ref.note}</span>` : "");
+  }
   const dis = (id, off) => document.getElementById(id).disabled = off;
   dis("navFirst", sel === 0);
   dis("navPrev", sel === 0);
@@ -539,26 +580,33 @@ function renderDetail() {
     }
   }
 
-  /* Versionsereignisse der gewaehlten Nacht */
+  /* Versionswechsel der gewaehlten Nacht gegenueber dem Vorlauf */
   const vList = document.getElementById("vevents");
+  const ref = prevRunLabel(sel);
   vList.innerHTML = "";
   if (!cd.length) {
     const back = nextEventRun(sel, -1);
     vList.appendChild(el("div", { class: "empty", html: prev
-      ? `Kein Service in neuer Version – was sich geändert hat, kommt aus dem Testcode.`
+      ? `Kein Service hat die Version gewechselt ${ref.text} –
+         was sich geändert hat, kommt aus dem Testcode.`
+         + (ref.note ? `<span class="miss">${ref.note}</span>` : "")
       : "Erster Lauf – keine Vergleichsbasis." }));
     if (back !== null) {
       const b = el("button", { class: "lnk", type: "button",
-        text: `↩ letzter Sprung: ${fmtDate(RUNS[back].run_id)} (${CDIFFS[back].map((x) => x.name).join(", ")})` });
+        text: `↩ letzter Wechsel: ${fmtDate(RUNS[back].run_id)} (${CDIFFS[back].map((x) => x.name).join(", ")})` });
       b.addEventListener("click", () => select(back));
       vList.appendChild(b);
     }
   } else {
+    vList.appendChild(el("div", { class: "vlead", html:
+      `${cd.length} von ${SERVICES.length} Services ${cd.length === 1 ? "lief" : "liefen"}
+       ${ref.text} in einer neuen Version:`
+      + (ref.note ? `<span class="miss">${ref.note}</span>` : "") }));
     cd.forEach((x) => {
       vList.appendChild(el("div", { class: "vrow", html:
         `<span class="n">${x.name}</span>
-         <span class="n">${x.to}<span class="bumptag">${x.kind}</span></span>
-         <span class="jump">vorher ${x.from}<span class="arrow">→</span>${x.to}</span>` }));
+         <span><span class="bumptag">${x.kind}</span></span>
+         <span class="jump">Version ${x.from}<span class="arrow">→</span>${x.to}</span>` }));
     });
   }
 }
