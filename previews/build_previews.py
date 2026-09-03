@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
-"""Baut die drei Vorschauseiten: Template + gemeinsame CSS/JS + Demo-Daten
-werden zu je einer eigenstaendigen HTML-Datei zusammengesetzt.
+"""Baut die Vorschauseiten aus dem synthetischen Datensatz.
 
-Bewusst ohne externe Assets: die fertige Datei laeuft per Doppelklick, ohne
-Server und ohne Internet - dieselbe Eigenschaft, die sie spaeter in einer
-abgeschotteten GitLab-Instanz braucht.
+Dasselbe Zusammensetzen wie `nrd build`, nur mit `demo-data.json` statt einer
+echten Historie - deshalb ruft das Skript den Builder des Pakets auf, statt die
+Platzhalterlogik ein zweites Mal zu fuehren.
 """
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-CSS = (HERE / "shared" / "core.css").read_text(encoding="utf-8")
-JS = (HERE / "shared" / "core.js").read_text(encoding="utf-8")
-DATA = (HERE / "demo-data.json").read_text(encoding="utf-8")
+sys.path.insert(0, str(HERE.parent))
 
-for tpl in sorted((HERE / "templates").glob("*.html")):
-    html = tpl.read_text(encoding="utf-8")
-    for token, value in (("/*__CSS__*/", CSS), ("/*__CORE__*/", JS), ("/*__DATA__*/", DATA)):
-        if token not in html:
-            raise SystemExit(f"{tpl.name}: Platzhalter {token} fehlt")
-        html = html.replace(token, value)
-    out = HERE / tpl.name
-    out.write_text(html, encoding="utf-8")
+from nrd.build import build  # noqa: E402
+
+from nrd.build import LAYOUT_DIR  # noqa: E402
+
+DATA = HERE / "demo-data.json"
+
+#: Layoutdatei -> Name der Vorschauseite. Die Varianten heissen im Paket nach
+#: ihrer Idee, in der Vorschau nach dem Buchstaben, unter dem sie besprochen
+#: wurden.
+VARIANTEN = {"timeline.html": "a.html", "runbook.html": "b.html"}
+
+for name, out_name in VARIANTEN.items():
+    out = build(LAYOUT_DIR / name, DATA, HERE / out_name, LAYOUT_DIR)
     print(f"{out.relative_to(HERE.parent)}  {out.stat().st_size / 1024:.0f} KB")

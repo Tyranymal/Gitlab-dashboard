@@ -1,26 +1,66 @@
 # Layout-Vorschauen
 
 Drei Entwürfe für das Nachtlauf-Dashboard, alle auf demselben synthetischen Datensatz.
-Jede Datei ist eigenständig: kein Server, kein CDN, keine Netzwerkanfrage – Doppelklick
-genügt. Das ist keine Bequemlichkeit, sondern Voraussetzung: interne GitLab-Instanzen
-haben im Browser-Kontext oft keinen Internetzugang.
+Jede Datei ist eigenständig: ein File, kein Server, kein Build zum Ansehen – Doppelklick
+genügt. Daten, CSS und JS stecken inline; keine Chart-Library wird nachgeladen. Einzige
+Ausnahme ist der Schriftschnitt IBM Plex von Google Fonts. Wo der Browser den nicht
+erreicht, greifen die Fallback-Stacks und die Seite rendert vollständig in Systemschrift –
+Layout und Farben bleiben, nur die Typografie sieht anders aus.
 
 | Datei | Variante | Stand |
 |---|---|---|
-| `b.html` | **Master / Detail** – gewählt | aktuell, mit Microservice-Versionen |
-| `a.html` | Timeline mit Versionsband | eingefroren, einzelne Release-Version |
+| `a.html` | **Timeline (Balkendiagramm)** – gewählt | aktuell, mit Microservice-Versionen |
+| `b.html` | Master / Detail | aktuell, mit Microservice-Versionen |
 | `c.html` | Test-×-Nacht-Matrix | eingefroren, einzelne Release-Version |
 
-`a.html` und `c.html` bleiben als Referenz liegen. Sie enthalten ihre Daten inline und
-rendern weiterhin, gehen aber noch von *einer* Release-Version aus – der Annahme, die
-sich als falsch herausgestellt hat. Ihre Templates liegen unter `_archived/`.
+Screenshots der drei Varianten liegen unter `screenshots/` – zum Verschicken, wenn der
+Empfaenger die HTML-Dateien nicht selbst oeffnen will.
+
+`c.html` bleibt als Referenz liegen. Die Datei enthält ihre Daten inline und rendert
+weiterhin, geht aber noch von *einer* Release-Version aus – der Annahme, die sich als
+falsch herausgestellt hat. Ihr Template liegt unter `_archived/`.
+
+Die Templates von A und B liegen nicht mehr hier, sondern unter
+[`nrd/layout/`](../nrd/layout) – dasselbe Layout baut `nrd build` mit echten
+Daten, und so bleibt es bei einem Verzeichnis zum Kopieren.
+
+## Was Variante A zeigt
+
+Über dem Balkendiagramm liegt kein Release-Band mehr, sondern ein Ereignisband: je Nacht
+ein Kästchen pro Service, der in neuer Version lief. Die Höhe des Stapels ist damit die
+Zahl der Sprünge, und durch jede Nacht mit Sprung läuft eine Senkrechte durch beide
+Diagramme – erst dadurch lässt sich ein Ausschlag einem Sprung zuordnen, ohne zwischen
+zwei Grafiken hin und her zu messen.
+
+Unter dem Diagramm steht eine Datumsleiste. Sie blättert nachtweise (`◀ Nacht`), springt
+von Versionsereignis zu Versionsereignis (`◀◀ Sprung`) und zurück auf die neueste Nacht.
+Alles darunter – Commits, Status-Wechsel, Versionswechsel – sowie die Kennzahlen oben
+folgen der Auswahl; ist nicht die neueste Nacht gewählt, sagt das die Kopfzeile der
+Hero-Kachel. Balken anklicken und ← → im fokussierten Diagramm tun dasselbe.
+
+Liegt zum Vorlauf ein Versionswechsel vor, steht er direkt in der Leiste ausgeschrieben –
+„Neue Version gegenüber Mi 02.09.2026: `ingest-service 7.2.1 → 7.3.0` minor" –, sonst
+„Keine Versionsänderung gegenüber …". Dasselbe ausführlich in der Card *Versionswechsel
+zum Vorlauf*. Verglichen wird immer mit dem vorherigen **Lauf**, nicht mit dem Vortag; ist
+dazwischen eine Nacht ausgefallen, steht das als Hinweis daneben, sonst liest man einen
+Zweitagessprung als Änderung über Nacht.
+
+Die Chronik am Seitenende führt jeden der 31 Versionssprünge als eigene Zeile: Nacht,
+Service, `vorher → nachher`, Art des Sprungs und der Abstand zum vorherigen Sprung
+desselben Service. Datum anklicken wählt die Nacht oben aus; die Zeilen der gewählten
+Nacht sind markiert, die Leiste darüber filtert auf einen Service.
 
 ## Neu bauen
 
 ```bash
 python3 gen_demo.py        # erzeugt demo-data.json
-python3 build_previews.py  # templates/ + shared/ + Daten -> b.html
+python3 build_previews.py  # nrd/layout/ + Daten -> a.html, b.html
+node shoot_previews.mjs    # a/b/c.html -> screenshots/*.png (Playwright + Chromium)
 ```
+
+Dieselben Templates baut `nrd build` mit einer echten Historie statt mit
+`demo-data.json` – das Format ist dasselbe. Wie die Daten entstehen, steht in
+der [README im Wurzelverzeichnis](../README.md).
 
 ## Der Datensatz
 

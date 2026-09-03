@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Laufzeitausgaben: die Historie lebt auf dem Branch nightly-data,
+# das gebaute Dashboard im Pages-Artefakt.
+/data/
+/public/
+/rf-out/

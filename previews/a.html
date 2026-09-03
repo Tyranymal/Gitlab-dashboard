@@ -312,7 +312,6 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
 }
 .tile { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
 .tile .val { font-size: 22px; font-weight: 600; line-height: 1.1; }
-.tile .val .unit { font-size: 13px; font-weight: 400; color: var(--ink-2); }
 .tile .delta { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
 .vband { display: block; }
@@ -320,10 +319,52 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
 .bar-hit { cursor: pointer; }
 .sel-ring { pointer-events: none; }
 
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-@media (max-width: 900px) { .split, .hero-row { grid-template-columns: 1fr; } }
+/* --- Datums-Navigation ueber den Detail-Cards --------------------------- */
+.daynav {
+  display: flex;
+  align-items: center;
+  gap: 8px 10px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+}
+.daynav .nav-date { font-size: 15px; font-weight: 600; font-family: "IBM Plex Mono", monospace; }
+.daynav .nav-pos { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.daynav .grow { flex: 1 1 12px; }
+/* Volle Breite unter den Schaltflaechen: was sich zum Vorlauf geaendert hat.
+   Steht dort, weil man es beim Blaettern liest, nicht nachdem man eine Card
+   gesucht hat. */
+.daynav .nav-note {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  padding-top: 9px;
+  margin-top: 2px;
+  border-top: 1px solid var(--grid);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+}
+.daynav .nav-note .b { font-family: "IBM Plex Mono", monospace; }
+.daynav .nav-note .b b { font-weight: 500; }
+.daynav .nav-note .lead { color: var(--muted); }
+.daynav .nav-note .miss { color: var(--ink-2); }
+.navbtn {
+  font: inherit; font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--border-hard); border-radius: 3px;
+  padding: 3px 9px; cursor: pointer; white-space: nowrap;
+}
+.navbtn:hover:not([disabled]) { background: var(--surface-2); color: var(--ink); }
+.navbtn[disabled] { opacity: 0.38; cursor: default; }
+.navbtn.strong { border-color: var(--accent); color: var(--accent); }
 
-.list { display: flex; flex-direction: column; }
+/* --- Detail-Cards ------------------------------------------------------- */
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(304px, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; } }
+
+.list { display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; }
 .list-row {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -338,12 +379,94 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
 .list-row .test { font-size: 12.5px; }
 .list-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .empty { color: var(--muted); font-size: 12.5px; padding: 10px 0; }
+
+/* Fehlermeldung eines Tests: eine Zeile, per Klick ganz. Aufgeklappt bleibt
+   sie umbrochen - Robot-Meldungen sind oft eine halbe Bildschirmbreite. */
+.msg {
+  grid-column: 2;
+  font: inherit;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: none;
+  border-left: 2px solid var(--st-new);
+  padding: 4px 8px;
+  margin-top: 5px;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.msg[aria-expanded="true"] { -webkit-line-clamp: unset; line-clamp: unset; }
+.msg.known { border-left-color: var(--st-known); }
 .selhead {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--grid);
 }
 .selhead .run-id { font-size: 15px; font-weight: 600; }
+.selhead .count { margin-left: auto; }
 .hint { font-size: 11.5px; color: var(--muted); }
+
+/* Versionsereignis: Service, Sprung, Art - dieselbe Zeilenform wie in Variante B */
+.vrow {
+  padding: 9px 4px 9px 11px;
+  border-bottom: 1px solid var(--grid);
+  border-left: 3px solid var(--accent);
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline;
+}
+.vrow:last-child { border-bottom: none; }
+.vrow .n { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 500; }
+.vrow .jump { grid-column: 1 / -1; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-2); }
+.vlead { font-size: 12.5px; color: var(--ink-2); padding: 2px 0 10px; }
+.vlead .miss, .empty .miss { display: block; color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+.vrow .arrow, .arrow { color: var(--muted); padding: 0 4px; }
+.bumptag {
+  font-family: "IBM Plex Mono", monospace; font-size: 10px;
+  border: 1px solid var(--border-hard); border-radius: 2px;
+  padding: 0 4px; color: var(--ink-2); margin-left: 6px;
+}
+
+/* --- Chronik ------------------------------------------------------------ */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.fbtn {
+  font: inherit; font-size: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--border-hard); border-radius: 3px;
+  padding: 3px 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.fbtn:hover { background: var(--surface-2); }
+.fbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.fbtn[aria-pressed="true"] .cnt { color: var(--surface); opacity: 0.75; }
+.fbtn .cnt { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.chron-scroll { max-height: 360px; overflow-y: auto; }
+table.chron { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+table.chron th {
+  text-align: left; font-weight: 500; font-size: 11px; color: var(--muted);
+  padding: 0 12px 6px 0; border-bottom: 1px solid var(--grid); white-space: nowrap;
+  position: sticky; top: 0; background: var(--surface);
+}
+table.chron td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+/* Platz fuer die 3px-Markierung der gewaehlten Nacht, damit sie nie im Datum steht */
+table.chron th:first-child, table.chron td:first-child { padding-left: 8px; }
+table.chron td.mono { font-family: "IBM Plex Mono", monospace; }
+table.chron tr.is-sel td { background: var(--surface-2); }
+table.chron tr.is-sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+table.chron td.gap { color: var(--muted); font-variant-numeric: tabular-nums; }
+.lnk {
+  font: inherit; font-family: "IBM Plex Mono", monospace;
+  background: none; border: none; padding: 0;
+  color: var(--accent); cursor: pointer; text-align: left;
+}
+.lnk:hover { text-decoration: underline; }
 </style>
 
 <div class="shell">
@@ -352,15 +475,17 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
       <div class="eyebrow">Robot Framework · Nachtlauf</div>
       <h1>Nightly Timeline</h1>
       <p class="sub">Jede Nacht ein Balken: pass, pass trotz <code>fail:</code>-Tag, bekannter
-        Fail, neuer Fail. Darüber das Release, darunter was sich seit dem letzten Lauf
-        verändert hat. Balken anklicken oder mit ← → durchgehen.</p>
+        Fail, neuer Fail. Darüber jeder Versionssprung der Services als Marke –
+        die Linien laufen durch das Diagramm, damit sichtbar wird, an welchem Sprung ein
+        Ausschlag hängt. Balken anklicken, mit ← → durchgehen oder unten über die
+        Datumsleiste zurückblättern.</p>
     </div>
     <div class="variant-tag">Variante A · Timeline</div>
   </header>
 
   <div class="hero-row">
     <div class="hero">
-      <div class="eyebrow">Letzter Lauf</div>
+      <div class="eyebrow" id="heroEyebrow">Gewählter Lauf</div>
       <div class="figure tnum" id="heroVal">–</div>
       <div class="cap" id="heroCap">neue Fails ohne <code>fail:</code>-Tag</div>
     </div>
@@ -371,12 +496,13 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
     <div class="panel-head">
       <div>
         <h2>Ergebnisse je Nacht</h2>
-        <div class="hint" id="chartHint">58 Nächte · zwei ausgefallene Läufe sind ausgelassen, nicht interpoliert</div>
+        <div class="hint" id="chartHint"></div>
       </div>
       <div class="legend" id="legend"></div>
     </div>
     <div class="scroll-x chart-wrap">
-      <svg id="vband" class="vband" role="img" aria-label="Release-Version je Nacht"></svg>
+      <svg id="vband" class="vband" role="img"
+           aria-label="Versionssprünge je Nacht: ein Kästchen je Service, der in dieser Nacht in neuer Version lief"></svg>
       <svg id="chart" tabindex="0" role="application"
            aria-label="Gestapelte Balken: Testergebnisse je Nacht. Mit Pfeiltasten navigieren."></svg>
       <div class="submicro">
@@ -391,6 +517,19 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
     </details>
   </section>
 
+  <nav class="daynav" aria-label="Nacht wählen">
+    <button class="navbtn" type="button" id="navFirst" title="älteste Nacht">⏮</button>
+    <button class="navbtn" type="button" id="navPrevEv" title="vorheriger Versionssprung">◀◀ Sprung</button>
+    <button class="navbtn" type="button" id="navPrev">◀ Nacht</button>
+    <span class="nav-date" id="navDate">–</span>
+    <span class="nav-pos" id="navPos"></span>
+    <button class="navbtn" type="button" id="navNext">Nacht ▶</button>
+    <button class="navbtn" type="button" id="navNextEv" title="nächster Versionssprung">Sprung ▶▶</button>
+    <span class="grow"></span>
+    <button class="navbtn strong" type="button" id="navLatest">zur neuesten Nacht</button>
+    <div class="nav-note" id="navNote"></div>
+  </nav>
+
   <div class="split">
     <section class="panel">
       <div class="selhead">
@@ -404,13 +543,37 @@ details.tableview .wrap { max-height: 340px; overflow: auto; margin-top: 8px; bo
         <span class="eyebrow">Status-Wechsel</span>
         <span class="run-id mono" id="selDate2"></span>
       </div>
+      <div class="filters" id="changeModes"></div>
       <div class="list" id="changes"></div>
     </section>
+    <section class="panel">
+      <div class="selhead">
+        <span class="eyebrow">Versionswechsel zum Vorlauf</span>
+        <span class="run-id mono" id="selDate3"></span>
+      </div>
+      <div class="list" id="vevents"></div>
+    </section>
   </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Versionsereignisse – Chronik</h2>
+        <div class="hint">Jeder Sprung eines Service als eigene Zeile, neueste zuerst.
+          Datum anklicken, um die Nacht oben auszuwählen.</div>
+      </div>
+      <span class="hint" id="chronTotal"></span>
+    </div>
+    <div class="filters" id="chronFilters"></div>
+    <div class="chron-scroll">
+      <table class="chron" id="chronTable"></table>
+    </div>
+    <div class="empty" id="chronEmpty" hidden></div>
+  </section>
 </div>
 
 <script>
-const DATA = {"schema":1,"generated":"demo","tests":[{"suite":"Smoke","name":"Report Threshold Alarm"},{"suite":"Smoke","name":"Ensure Power Cycle"},{"suite":"Smoke","name":"Validate Unit Conversion"},{"suite":"Smoke","name":"Recover From Sample Rate 48 kHz"},{"suite":"Smoke","name":"Report Config Export"},{"suite":"Smoke","name":"Ensure Temperature Offset"},{"suite":"Smoke","name":"Persist Cold Start"},{"suite":"Smoke","name":"Validate Power Cycle"},{"suite":"Smoke","name":"Validate Zero Point"},{"suite":"Smoke","name":"Detect Sensor Timeout"},{"suite":"Smoke","name":"Reject Bulk Transfer"},{"suite":"Smoke","name":"Reject Checksum Mismatch"},{"suite":"Smoke","name":"Check Threshold Alarm"},{"suite":"Smoke","name":"Ensure Sample Rate 48 kHz"},{"suite":"Smoke","name":"Recover From Firmware Rollback"},{"suite":"Smoke","name":"Reset Concurrent Access"},{"suite":"Smoke","name":"Report Concurrent Access"},{"suite":"Smoke","name":"Reset Baud Rate Switch"},{"suite":"Device.Connection","name":"Recover From Firmware Rollback"},{"suite":"Device.Connection","name":"Report Range Overflow"},{"suite":"Device.Connection","name":"Ensure Firmware Rollback"},{"suite":"Device.Connection","name":"Validate Config Export"},{"suite":"Device.Connection","name":"Validate Multi Channel Sync"},{"suite":"Device.Connection","name":"Verify Concurrent Access"},{"suite":"Device.Connection","name":"Validate Token Refresh"},{"suite":"Device.Connection","name":"Ensure Range Overflow"},{"suite":"Device.Connection","name":"Persist Concurrent Access"},{"suite":"Device.Connection","name":"Reset Unit Conversion"},{"suite":"Device.Connection","name":"Report Session Handshake"},{"suite":"Device.Connection","name":"Reset Locale Fallback"},{"suite":"Device.Connection","name":"Validate Idle Reconnect"},{"suite":"Device.Connection","name":"Reset Watchdog Trip"},{"suite":"Device.Connection","name":"Check Watchdog Trip"},{"suite":"Device.Connection","name":"Reset Firmware Rollback"},{"suite":"Device.Connection","name":"Recover From Config Export"},{"suite":"Device.Connection","name":"Persist Requirement Link"},{"suite":"Device.Connection","name":"Reset Drift Compensation"},{"suite":"Device.Connection","name":"Recover From Sample Rate 48 kHz"},{"suite":"Device.Connection","name":"Report Firmware Rollback"},{"suite":"Device.Connection","name":"Check Locale Fallback"},{"suite":"Device.Connection","name":"Report Multi Channel Sync"},{"suite":"Device.Connection","name":"Recover From Session Handshake"},{"suite":"Device.Firmware","name":"Ensure Sample Rate 48 kHz"},{"suite":"Device.Firmware","name":"Validate Baud Rate Switch"},{"suite":"Device.Firmware","name":"Reset Requirement Link"},{"suite":"Device.Firmware","name":"Detect Partial Payload"},{"suite":"Device.Firmware","name":"Check Temperature Offset"},{"suite":"Device.Firmware","name":"Validate Idle Reconnect"},{"suite":"Device.Firmware","name":"Check Baud Rate Switch"},{"suite":"Device.Firmware","name":"Reset Watchdog Trip"},{"suite":"Device.Firmware","name":"Check Session Handshake"},{"suite":"Device.Firmware","name":"Check Sensor Timeout"},{"suite":"Device.Firmware","name":"Verify Config Export"},{"suite":"Device.Firmware","name":"Recover From Multi Channel Sync"},{"suite":"Device.Firmware","name":"Reset Concurrent Access"},{"suite":"Device.Firmware","name":"Check Range Overflow"},{"suite":"Device.Firmware","name":"Reject Session Handshake"},{"suite":"Device.Firmware","name":"Check Locale Fallback"},{"suite":"Device.Firmware","name":"Recover From Idle Reconnect"},{"suite":"Device.Firmware","name":"Detect Unit Conversion"},{"suite":"Device.Firmware","name":"Reject Bulk Transfer"},{"suite":"Device.Firmware","name":"Verify Baud Rate Switch"},{"suite":"Device.Firmware","name":"Report Unit Conversion"},{"suite":"Measurement.Calibration","name":"Recover From Requirement Link"},{"suite":"Measurement.Calibration","name":"Reset Zero Point"},{"suite":"Measurement.Calibration","name":"Reset Cold Start"},{"suite":"Measurement.Calibration","name":"Detect Drift Compensation"},{"suite":"Measurement.Calibration","name":"Persist Token Refresh"},{"suite":"Measurement.Calibration","name":"Recover From Drift Compensation"},{"suite":"Measurement.Calibration","name":"Ensure Zero Point"},{"suite":"Measurement.Calibration","name":"Report Firmware Rollback"},{"suite":"Measurement.Calibration","name":"Reject Temperature Offset"},{"suite":"Measurement.Calibration","name":"Ensure Temperature Offset"},{"suite":"Measurement.Calibration","name":"Verify Requirement Link"},{"suite":"Measurement.Calibration","name":"Reject Checksum Mismatch"},{"suite":"Measurement.Calibration","name":"Recover From Threshold Alarm"},{"suite":"Measurement.Calibration","name":"Reset Checksum Mismatch"},{"suite":"Measurement.Calibration","name":"Persist Multi Channel Sync"},{"suite":"Measurement.Calibration","name":"Check Unit Conversion"},{"suite":"Measurement.Calibration","name":"Persist Unit Conversion"},{"suite":"Measurement.Calibration","name":"Validate Range Overflow"},{"suite":"Measurement.Calibration","name":"Recover From Token Refresh"},{"suite":"Measurement.Calibration","name":"Verify Firmware Rollback"},{"suite":"Measurement.Calibration","name":"Recover From Concurrent Access"},{"suite":"Measurement.Calibration","name":"Verify Config Export"},{"suite":"Measurement.Calibration","name":"Ensure Config Export"},{"suite":"Measurement.Calibration","name":"Report Locale Fallback"},{"suite":"Measurement.Calibration","name":"Ensure Unit Conversion"},{"suite":"Measurement.Calibration","name":"Check Sensor Timeout"},{"suite":"Measurement.Calibration","name":"Reject Multi Channel Sync"},{"suite":"Measurement.Calibration","name":"Reset Temperature Offset"},{"suite":"Measurement.Calibration","name":"Detect Power Cycle"},{"suite":"Measurement.Calibration","name":"Verify Zero Point"},{"suite":"Measurement.Calibration","name":"Recover From Sensor Timeout"},{"suite":"Measurement.Streaming","name":"Recover From Multi Channel Sync"},{"suite":"Measurement.Streaming","name":"Ensure Drift Compensation"},{"suite":"Measurement.Streaming","name":"Ensure Cold Start"},{"suite":"Measurement.Streaming","name":"Reset Partial Payload"},{"suite":"Measurement.Streaming","name":"Detect Threshold Alarm"},{"suite":"Measurement.Streaming","name":"Reject Token Refresh"},{"suite":"Measurement.Streaming","name":"Report Cold Start"},{"suite":"Measurement.Streaming","name":"Persist Sample Rate 48 kHz"},{"suite":"Measurement.Streaming","name":"Recover From Locale Fallback"},{"suite":"Measurement.Streaming","name":"Report Sample Rate 48 kHz"},{"suite":"Measurement.Streaming","name":"Ensure Range Overflow"},{"suite":"Measurement.Streaming","name":"Report Temperature Offset"},{"suite":"Measurement.Streaming","name":"Check Partial Payload"},{"suite":"Measurement.Streaming","name":"Verify Sensor Timeout"},{"suite":"Measurement.Streaming","name":"Check Temperature Offset"},{"suite":"Measurement.Streaming","name":"Validate Baud Rate Switch"},{"suite":"Measurement.Streaming","name":"Report Session Handshake"},{"suite":"Measurement.Streaming","name":"Detect Watchdog Trip"},{"suite":"Measurement.Streaming","name":"Detect Firmware Rollback"},{"suite":"Measurement.Streaming","name":"Persist Power Cycle"},{"suite":"Measurement.Streaming","name":"Report Range Overflow"},{"suite":"Measurement.Streaming","name":"Validate Drift Compensation"},{"suite":"Measurement.Streaming","name":"Report Threshold Alarm"},{"suite":"Measurement.Streaming","name":"Detect Power Cycle"},{"suite":"Measurement.Streaming","name":"Check Watchdog Trip"},{"suite":"Measurement.Streaming","name":"Reject Config Export"},{"suite":"Measurement.Streaming","name":"Persist Bulk Transfer"},{"suite":"Requirements.Traceability","name":"Persist Zero Point"},{"suite":"Requirements.Traceability","name":"Validate Drift Compensation"},{"suite":"Requirements.Traceability","name":"Check Config Export"},{"suite":"Requirements.Traceability","name":"Persist Multi Channel Sync"},{"suite":"Requirements.Traceability","name":"Recover From Sample Rate 48 kHz"},{"suite":"Requirements.Traceability","name":"Persist Sample Rate 48 kHz"},{"suite":"Requirements.Traceability","name":"Check Zero Point"},{"suite":"Requirements.Traceability","name":"Reset Zero Point"},{"suite":"Requirements.Traceability","name":"Verify Session Handshake"},{"suite":"Requirements.Traceability","name":"Reject Firmware Rollback"},{"suite":"Requirements.Traceability","name":"Reject Baud Rate Switch"},{"suite":"Requirements.Traceability","name":"Reject Session Handshake"},{"suite":"Requirements.Traceability","name":"Detect Checksum Mismatch"},{"suite":"Requirements.Traceability","name":"Check Unit Conversion"},{"suite":"Requirements.Traceability","name":"Reset Power Cycle"},{"suite":"Requirements.Traceability","name":"Check Baud Rate Switch"},{"suite":"API.Rest","name":"Report Sensor Timeout"},{"suite":"API.Rest","name":"Recover From Sensor Timeout"},{"suite":"API.Rest","name":"Verify Config Import"},{"suite":"API.Rest","name":"Validate Drift Compensation"},{"suite":"API.Rest","name":"Reset Config Export"},{"suite":"API.Rest","name":"Verify Cold Start"},{"suite":"API.Rest","name":"Reset Partial Payload"},{"suite":"API.Rest","name":"Detect Session Handshake"},{"suite":"API.Rest","name":"Persist Locale Fallback"},{"suite":"API.Rest","name":"Check Zero Point"},{"suite":"API.Rest","name":"Reset Session Handshake"},{"suite":"API.Rest","name":"Recover From Checksum Mismatch"},{"suite":"API.Rest","name":"Ensure Idle Reconnect"},{"suite":"API.Rest","name":"Persist Checksum Mismatch"},{"suite":"API.Rest","name":"Ensure Threshold Alarm"},{"suite":"API.Rest","name":"Recover From Temperature Offset"},{"suite":"API.Rest","name":"Check Concurrent Access"},{"suite":"API.Rest","name":"Persist Zero Point"},{"suite":"API.Rest","name":"Verify Firmware Rollback"},{"suite":"API.Rest","name":"Detect Temperature Offset"},{"suite":"API.Rest","name":"Check Unit Conversion"},{"suite":"API.Rest","name":"Validate Partial Payload"},{"suite":"API.Rest","name":"Reject Checksum Mismatch"},{"suite":"API.Rest","name":"Report Threshold Alarm"},{"suite":"API.Rest","name":"Ensure Power Cycle"},{"suite":"API.Rest","name":"Recover From Token Refresh"},{"suite":"API.Rest","name":"Detect Drift Compensation"},{"suite":"API.Rest","name":"Ensure Session Handshake"},{"suite":"API.Rest","name":"Check Watchdog Trip"},{"suite":"API.Websocket","name":"Persist Watchdog Trip"},{"suite":"API.Websocket","name":"Verify Power Cycle"},{"suite":"API.Websocket","name":"Ensure Token Refresh"},{"suite":"API.Websocket","name":"Persist Config Import"},{"suite":"API.Websocket","name":"Persist Cold Start"},{"suite":"API.Websocket","name":"Validate Unit Conversion"},{"suite":"API.Websocket","name":"Check Zero Point"},{"suite":"API.Websocket","name":"Ensure Bulk Transfer"},{"suite":"API.Websocket","name":"Persist Partial Payload"},{"suite":"API.Websocket","name":"Detect Config Import"},{"suite":"API.Websocket","name":"Reset Bulk Transfer"},{"suite":"API.Websocket","name":"Reject Concurrent Access"},{"suite":"API.Websocket","name":"Detect Sensor Timeout"},{"suite":"API.Websocket","name":"Detect Threshold Alarm"},{"suite":"API.Websocket","name":"Detect Zero Point"},{"suite":"API.Websocket","name":"Validate Checksum Mismatch"},{"suite":"API.Websocket","name":"Check Concurrent Access"},{"suite":"API.Websocket","name":"Verify Multi Channel Sync"},{"suite":"API.Websocket","name":"Check Drift Compensation"},{"suite":"UI.Configuration","name":"Reset Firmware Rollback"},{"suite":"UI.Configuration","name":"Report Watchdog Trip"},{"suite":"UI.Configuration","name":"Reset Token Refresh"},{"suite":"UI.Configuration","name":"Reject Drift Compensation"},{"suite":"UI.Configuration","name":"Detect Cold Start"},{"suite":"UI.Configuration","name":"Reset Idle Reconnect"},{"suite":"UI.Configuration","name":"Ensure Baud Rate Switch"},{"suite":"UI.Configuration","name":"Recover From Zero Point"},{"suite":"UI.Configuration","name":"Check Multi Channel Sync"},{"suite":"UI.Configuration","name":"Reset Sample Rate 48 kHz"},{"suite":"UI.Configuration","name":"Verify Temperature Offset"},{"suite":"UI.Configuration","name":"Validate Firmware Rollback"},{"suite":"UI.Configuration","name":"Persist Config Import"},{"suite":"UI.Configuration","name":"Reject Unit Conversion"},{"suite":"UI.Configuration","name":"Persist Temperature Offset"},{"suite":"UI.Configuration","name":"Report Checksum Mismatch"},{"suite":"UI.Configuration","name":"Validate Range Overflow"},{"suite":"UI.Configuration","name":"Reject Threshold Alarm"},{"suite":"UI.Configuration","name":"Ensure Config Import"},{"suite":"UI.Configuration","name":"Validate Config Import"},{"suite":"Smoke","name":"Check Session Handshake 205"},{"suite":"Measurement.Calibration","name":"Detect Sample Rate 48 kHz 206"},{"suite":"Device.Firmware","name":"Check Config Import 207"},{"suite":"Requirements.Traceability","name":"Ensure Sensor Timeout 208"},{"suite":"UI.Configuration","name":"Detect Cold Start 209"},{"suite":"UI.Configuration","name":"Reject Unit Conversion 210"},{"suite":"Device.Connection","name":"Reset Bulk Transfer 211"},{"suite":"UI.Configuration","name":"Reset Token Refresh 212"},{"suite":"Measurement.Calibration","name":"Detect Config Export 213"}],"runs":[{"run_id":"2026-07-06","started_at":"2026-07-06T01:00:00+02:00","elapsed_s":7480,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48210","sha":"19c16621","prev_sha":"f975252b","commits":[{"sha":"ef1b1a75","author":"m.keller","subject":"fail:DEV-406 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"e260ea11","author":"m.keller","subject":"fail:DEV-408 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"0a9467c7","author":"s.brandt","subject":"Doku der Suite-Metadaten an Release 24.2.7 angepasst"},{"sha":"f1b487ab","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"ea757d26","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"ff51f2ff","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPFPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPFPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfFPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-07","started_at":"2026-07-07T01:00:00+02:00","elapsed_s":8207,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48217","sha":"8756acaf","prev_sha":"19c16621","commits":[{"sha":"c95d2a9b","author":"m.keller","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-08","started_at":"2026-07-08T01:00:00+02:00","elapsed_s":7255,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48224","sha":"f8f5a2b2","prev_sha":"8756acaf","commits":[{"sha":"bcae9b55","author":"t.ruf","subject":"fail:DEV-419 Tag entfernt, Test laeuft wieder"},{"sha":"ffa67334","author":"s.brandt","subject":"fail:DEV-426 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"739998ca","author":"a.wieland","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-07-09","started_at":"2026-07-09T01:00:00+02:00","elapsed_s":8551,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48231","sha":"c7fc3a8c","prev_sha":"f8f5a2b2","commits":[{"sha":"bf1aed6f","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-07-10","started_at":"2026-07-10T01:00:00+02:00","elapsed_s":7944,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48238","sha":"47d514a1","prev_sha":"c7fc3a8c","commits":[],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPFfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-11","started_at":"2026-07-11T01:00:00+02:00","elapsed_s":8008,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48245","sha":"92d7ea7d","prev_sha":"47d514a1","commits":[{"sha":"c8ba85b3","author":"m.keller","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"6c0e64ec","author":"m.keller","subject":"fail:DEV-445 Tag entfernt, Test laeuft wieder"},{"sha":"e5a3ab72","author":"m.keller","subject":"fail:DEV-447 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"2ef0502c","author":"t.ruf","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"92d43556","author":"j.pohl","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-12","started_at":"2026-07-12T01:00:00+02:00","elapsed_s":8455,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48252","sha":"d0637b7f","prev_sha":"92d7ea7d","commits":[{"sha":"3019f779","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"e04adacd","author":"t.ruf","subject":"fail:DEV-462 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"bcfe5ae8","author":"j.pohl","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfFfPfpfPFfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-13","started_at":"2026-07-13T01:00:00+02:00","elapsed_s":7528,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48259","sha":"8dfcdd9c","prev_sha":"d0637b7f","commits":[{"sha":"946f07d8","author":"s.brandt","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"66d2ad23","author":"a.wieland","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"77b8ab67","author":"m.keller","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"ec6275c7","author":"a.wieland","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"ef35f18a","author":"t.ruf","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPFPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-14","started_at":"2026-07-14T01:00:00+02:00","elapsed_s":8355,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48266","sha":"bf8f533c","prev_sha":"8dfcdd9c","commits":[{"sha":"9c253796","author":"a.wieland","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"36a6ce96","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"c0dae8b3","author":"j.pohl","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"561b751c","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"eef3e55a","author":"t.ruf","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"b12ed8a5","author":"t.ruf","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-15","started_at":"2026-07-15T01:00:00+02:00","elapsed_s":8353,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48273","sha":"f6e8efcf","prev_sha":"bf8f533c","commits":[{"sha":"90c220d9","author":"m.keller","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"1f6fe8f8","author":"s.brandt","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"1bf7371e","author":"s.brandt","subject":"Doku der Suite-Metadaten an Release 24.2.7 angepasst"},{"sha":"d4ebe37e","author":"a.wieland","subject":"Doku der Suite-Metadaten an Release 24.2.7 angepasst"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-16","started_at":"2026-07-16T01:00:00+02:00","elapsed_s":9384,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48280","sha":"b8bebbd2","prev_sha":"f6e8efcf","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPFPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-17","started_at":"2026-07-17T01:00:00+02:00","elapsed_s":7408,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48287","sha":"07d33bf5","prev_sha":"b8bebbd2","commits":[{"sha":"46a36ba5","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"a3bbbb15","author":"a.wieland","subject":"fail:DEV-543 Tag entfernt, Test laeuft wieder"},{"sha":"6f38be86","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"ac64579d","author":"s.brandt","subject":"fail:DEV-550 Tag entfernt, Test laeuft wieder"},{"sha":"8a4cccc1","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"0322c8ad","author":"j.pohl","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-18","started_at":"2026-07-18T01:00:00+02:00","elapsed_s":7826,"release_version":"24.2.7","version_source":"suite_doc","pipeline_id":"48294","sha":"78c53235","prev_sha":"07d33bf5","commits":[{"sha":"8fbf3977","author":"s.brandt","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"a832fd94","author":"m.keller","subject":"fail:DEV-566 Tag entfernt, Test laeuft wieder"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPFfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-19","started_at":"2026-07-19T01:00:00+02:00","elapsed_s":9001,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48301","sha":"02feeef1","prev_sha":"78c53235","commits":[{"sha":"646890ff","author":"a.wieland","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"0b6c9ad3","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"9640b514","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPFPPPPPffPPPfPfffPfffffffFPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-07-20","started_at":"2026-07-20T01:00:00+02:00","elapsed_s":7554,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48308","sha":"a221d698","prev_sha":"02feeef1","commits":[{"sha":"e759072e","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"7addb33a","author":"a.wieland","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"2e60923e","author":"s.brandt","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PPPPPPPPfPFPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfFPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-21","started_at":"2026-07-21T01:00:00+02:00","elapsed_s":8975,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48315","sha":"09efe3bf","prev_sha":"a221d698","commits":[{"sha":"3021d46b","author":"j.pohl","subject":"Doku der Suite-Metadaten an Release 24.2.7 angepasst"},{"sha":"3428ab9d","author":"m.keller","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"9abee8da","author":"t.ruf","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"60c0ecb2","author":"m.keller","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-22","started_at":"2026-07-22T01:00:00+02:00","elapsed_s":9095,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48322","sha":"f037ebe8","prev_sha":"09efe3bf","commits":[{"sha":"c5af5da0","author":"t.ruf","subject":"Doku der Suite-Metadaten an Release 24.2.7 angepasst"},{"sha":"9cc2cbeb","author":"j.pohl","subject":"fail:DEV-611 Tag entfernt, Test laeuft wieder"},{"sha":"c8cada44","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"265a333f","author":"t.ruf","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"d55a6413","author":"t.ruf","subject":"fail:DEV-621 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-24","started_at":"2026-07-24T01:00:00+02:00","elapsed_s":7247,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48336","sha":"1f68ebb4","prev_sha":"f037ebe8","commits":[{"sha":"59ab665a","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"4a2164a0","author":"s.brandt","subject":"fail:DEV-625 Tag entfernt, Test laeuft wieder"},{"sha":"68243f85","author":"a.wieland","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PPPPPPPPfPPPfPffPPFPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-25","started_at":"2026-07-25T01:00:00+02:00","elapsed_s":7300,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48343","sha":"101cfc56","prev_sha":"1f68ebb4","commits":[{"sha":"7cd164b9","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfFPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPFfPffPPPPFPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-26","started_at":"2026-07-26T01:00:00+02:00","elapsed_s":6902,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48350","sha":"5cfb3901","prev_sha":"101cfc56","commits":[{"sha":"7ec31000","author":"m.keller","subject":"fail:DEV-628 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-27","started_at":"2026-07-27T01:00:00+02:00","elapsed_s":7044,"release_version":"24.2.7","version_source":"metadata","pipeline_id":"48357","sha":"0bb75235","prev_sha":"5cfb3901","commits":[{"sha":"679a66a8","author":"a.wieland","subject":"fail:DEV-634 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-07-28","started_at":"2026-07-28T01:00:00+02:00","elapsed_s":8479,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48364","sha":"ffc02ad5","prev_sha":"0bb75235","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffFPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPFfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-29","started_at":"2026-07-29T01:00:00+02:00","elapsed_s":7319,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48371","sha":"7890d0aa","prev_sha":"ffc02ad5","commits":[{"sha":"cdac04bc","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"0d493e3e","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"426453d2","author":"t.ruf","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"bb490175","author":"m.keller","subject":"fail:DEV-651 Tag entfernt, Test laeuft wieder"},{"sha":"d3f9ff89","author":"t.ruf","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-30","started_at":"2026-07-30T01:00:00+02:00","elapsed_s":8880,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48378","sha":"0e4a01d4","prev_sha":"7890d0aa","commits":[{"sha":"cc411591","author":"j.pohl","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"ae9fcc49","author":"t.ruf","subject":"Doku der Suite-Metadaten an Release 24.3.0 angepasst"},{"sha":"a3212400","author":"t.ruf","subject":"fail:DEV-669 Tag entfernt, Test laeuft wieder"},{"sha":"045bee5e","author":"t.ruf","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"3dd2aa82","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"7be31dbe","author":"a.wieland","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfF-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-07-31","started_at":"2026-07-31T01:00:00+02:00","elapsed_s":8626,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48385","sha":"8bed77a5","prev_sha":"0e4a01d4","commits":[{"sha":"3b32d19e","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-01","started_at":"2026-08-01T01:00:00+02:00","elapsed_s":6980,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48392","sha":"4b9669d7","prev_sha":"8bed77a5","commits":[{"sha":"29883d65","author":"j.pohl","subject":"Doku der Suite-Metadaten an Release 24.3.0 angepasst"},{"sha":"12058840","author":"s.brandt","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"61dc353e","author":"s.brandt","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"f3c4f495","author":"s.brandt","subject":"fail:DEV-694 Tag entfernt, Test laeuft wieder"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPFffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPPfPffFPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-02","started_at":"2026-08-02T01:00:00+02:00","elapsed_s":8393,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48399","sha":"44b51480","prev_sha":"4b9669d7","commits":[{"sha":"a0f41b3a","author":"m.keller","subject":"Doku der Suite-Metadaten an Release 24.3.0 angepasst"},{"sha":"4aa91be7","author":"t.ruf","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffFPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPf-Pf-FPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfFfPPPPPf"},{"run_id":"2026-08-03","started_at":"2026-08-03T01:00:00+02:00","elapsed_s":7253,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48406","sha":"399ac9d0","prev_sha":"44b51480","commits":[{"sha":"5019cfb0","author":"m.keller","subject":"fail:DEV-710 Tag entfernt, Test laeuft wieder"},{"sha":"64884b8f","author":"j.pohl","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"150a0822","author":"a.wieland","subject":"fail:DEV-724 Tag entfernt, Test laeuft wieder"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfP-ffPPfPPPfPPfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-04","started_at":"2026-08-04T01:00:00+02:00","elapsed_s":9178,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48413","sha":"448f8bb8","prev_sha":"399ac9d0","commits":[{"sha":"607d891c","author":"t.ruf","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"31d073b2","author":"a.wieland","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"9c925586","author":"s.brandt","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfff-fPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfFPPfffPPfPPf-Pf-PPPPfPfPfffff-PfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfP-ffPPfPPPfPFfPffPPPPPPP-fffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-05","started_at":"2026-08-05T01:00:00+02:00","elapsed_s":7687,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48420","sha":"865bcd53","prev_sha":"448f8bb8","commits":[{"sha":"d3fa3e5f","author":"m.keller","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPFPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPFfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-06","started_at":"2026-08-06T01:00:00+02:00","elapsed_s":8734,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48427","sha":"86d41544","prev_sha":"865bcd53","commits":[{"sha":"3b6aae11","author":"a.wieland","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"2a91e871","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"1a39f585","author":"s.brandt","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPFfPPPfffPPfPPfPPfPPPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-07","started_at":"2026-08-07T01:00:00+02:00","elapsed_s":6827,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48434","sha":"55317a11","prev_sha":"86d41544","commits":[{"sha":"8ddbcf6d","author":"a.wieland","subject":"fail:DEV-754 Tag entfernt, Test laeuft wieder"},{"sha":"610d6491","author":"s.brandt","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"b073f33f","author":"j.pohl","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"97a8277f","author":"s.brandt","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPPPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-08","started_at":"2026-08-08T01:00:00+02:00","elapsed_s":9390,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48441","sha":"b905192d","prev_sha":"55317a11","commits":[{"sha":"06b50d67","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"da5d4f78","author":"t.ruf","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"d2d7e813","author":"s.brandt","subject":"fail:DEV-785 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPFfPPffPfPPffPPPfffPPPfFPPfffPPfPPfPPfPFPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-09","started_at":"2026-08-09T01:00:00+02:00","elapsed_s":7460,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48448","sha":"d9278b1c","prev_sha":"b905192d","commits":[{"sha":"0e52f332","author":"s.brandt","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"711805ef","author":"s.brandt","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"16a469cf","author":"t.ruf","subject":"Doku der Suite-Metadaten an Release 24.3.0 angepasst"},{"sha":"4caca6d6","author":"j.pohl","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"139dc122","author":"t.ruf","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPFPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPFPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-10","started_at":"2026-08-10T01:00:00+02:00","elapsed_s":8692,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48455","sha":"250cdff9","prev_sha":"d9278b1c","commits":[{"sha":"58a5f065","author":"m.keller","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"e9a61572","author":"t.ruf","subject":"fail:DEV-817 Tag entfernt, Test laeuft wieder"},{"sha":"bdcc717e","author":"a.wieland","subject":"fail:DEV-824 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"6324d16c","author":"m.keller","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"afb75450","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPPPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-11","started_at":"2026-08-11T01:00:00+02:00","elapsed_s":8318,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48462","sha":"90e2c075","prev_sha":"250cdff9","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPFFPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPPPPPfFfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-12","started_at":"2026-08-12T01:00:00+02:00","elapsed_s":8485,"release_version":"24.3.0","version_source":"metadata","pipeline_id":"48469","sha":"1d86dec7","prev_sha":"90e2c075","commits":[{"sha":"345152b5","author":"j.pohl","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"aef835d3","author":"j.pohl","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"a67925ea","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"1b839067","author":"a.wieland","subject":"fail:DEV-848 Tag entfernt, Test laeuft wieder"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffPPfPPfPPfPFPPPfPfPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPFfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-13","started_at":"2026-08-13T01:00:00+02:00","elapsed_s":7115,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48476","sha":"c106779b","prev_sha":"1d86dec7","commits":[{"sha":"f07b4782","author":"j.pohl","subject":"fail:DEV-850 Tag entfernt, Test laeuft wieder"},{"sha":"7df3bf3c","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"150f91c8","author":"t.ruf","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"159c981e","author":"j.pohl","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"dd087164","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"c1499232","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"}],"s":"PFPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-14","started_at":"2026-08-14T01:00:00+02:00","elapsed_s":7739,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48483","sha":"2b686361","prev_sha":"c106779b","commits":[{"sha":"dfaf08cf","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"ee934965","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"960a0efb","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"abb1e29c","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPFfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-15","started_at":"2026-08-15T01:00:00+02:00","elapsed_s":8291,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48490","sha":"c83806dc","prev_sha":"2b686361","commits":[{"sha":"031e3b57","author":"j.pohl","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"b18cd65f","author":"j.pohl","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"645029a1","author":"t.ruf","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfFPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-17","started_at":"2026-08-17T01:00:00+02:00","elapsed_s":8667,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48504","sha":"5e835f1e","prev_sha":"c83806dc","commits":[{"sha":"2c8b16ee","author":"a.wieland","subject":"Doku der Suite-Metadaten an Release 24.3.1 angepasst"}],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPPfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-18","started_at":"2026-08-18T01:00:00+02:00","elapsed_s":7459,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48511","sha":"3630b998","prev_sha":"5e835f1e","commits":[{"sha":"2937337d","author":"s.brandt","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"97ff625a","author":"s.brandt","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPFPPPfffPfPPPPPPPFPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPFfPffPPPPPPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-19","started_at":"2026-08-19T01:00:00+02:00","elapsed_s":9394,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48518","sha":"58694523","prev_sha":"3630b998","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPPPPPfffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfPPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPPPPPPPPPPPPffPPPfPfffPfffffffPPfPfPfpfPPfPPffPPfPPPfPFfPffPPPPPPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-20","started_at":"2026-08-20T01:00:00+02:00","elapsed_s":9034,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48525","sha":"fd45f024","prev_sha":"58694523","commits":[{"sha":"e72ccf03","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"bd52249e","author":"j.pohl","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"119df4c1","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"b30f3ac0","author":"t.ruf","subject":"fail:DEV-933 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"70dd66ad","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"79096b77","author":"t.ruf","subject":"Doku der Suite-Metadaten an Release 24.3.1 angepasst"}],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPffPPPfffPPPfFPPfffFFfPPfFPfPPPPFfPfFfffffPFfffffPfPPFfFfPPPFFPFfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffffP-fPfPfpfPFfPPffPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-21","started_at":"2026-08-21T01:00:00+02:00","elapsed_s":8688,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48532","sha":"ec9b191b","prev_sha":"fd45f024","commits":[{"sha":"391e2b08","author":"j.pohl","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"41afe177","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"8eb97e67","author":"j.pohl","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"5f19267b","author":"a.wieland","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"8dfeab10","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PFPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPFFfPPfFPfPPPPFfPPFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-22","started_at":"2026-08-22T01:00:00+02:00","elapsed_s":9139,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48539","sha":"5af82e86","prev_sha":"ec9b191b","commits":[{"sha":"7c2765db","author":"a.wieland","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PFPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPFFfPPfFPfPPPPFfPPFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPFfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-23","started_at":"2026-08-23T01:00:00+02:00","elapsed_s":8835,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48546","sha":"c4131137","prev_sha":"5af82e86","commits":[{"sha":"f62c8d16","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"d1c28309","author":"m.keller","subject":"fail:DEV-971 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"83fc41c5","author":"t.ruf","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PFPPPPPPfPPPfFffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPFFfPPfFPfPFPPFfPPFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPFfPPfPPPfPPPfPFfPffPPP-PPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-24","started_at":"2026-08-24T01:00:00+02:00","elapsed_s":7998,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48553","sha":"d1659c92","prev_sha":"c4131137","commits":[{"sha":"46d74dfc","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPFPfPPffPfPPPfPPPfffPPPfFPPffPFFfPPfFPfPPPPFfPPFfffffPFfffffPfPPFfFfPPPFFPPfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-25","started_at":"2026-08-25T01:00:00+02:00","elapsed_s":8084,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48560","sha":"9c8cc625","prev_sha":"d1659c92","commits":[{"sha":"f64c6693","author":"m.keller","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"feac4540","author":"a.wieland","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"eaec8806","author":"a.wieland","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"678fca91","author":"t.ruf","subject":"fail:DEV-995 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPPPPPPPfPPPfPffPPPPPFPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-26","started_at":"2026-08-26T01:00:00+02:00","elapsed_s":7474,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48567","sha":"b4d57b26","prev_sha":"9c8cc625","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-27","started_at":"2026-08-27T01:00:00+02:00","elapsed_s":8681,"release_version":"24.3.1","version_source":"metadata","pipeline_id":"48574","sha":"3da05b77","prev_sha":"b4d57b26","commits":[{"sha":"463593db","author":"s.brandt","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"e36b840b","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"e78bd05d","author":"s.brandt","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PFPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPFPfPfPPPPPf"},{"run_id":"2026-08-28","started_at":"2026-08-28T01:00:00+02:00","elapsed_s":9016,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48581","sha":"16741c11","prev_sha":"3da05b77","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPPPfPPffPfPPPfPPPfffPPPfFPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-29","started_at":"2026-08-29T01:00:00+02:00","elapsed_s":7424,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48588","sha":"3ff2ae6b","prev_sha":"16741c11","commits":[{"sha":"ab42a1d2","author":"t.ruf","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PFPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-30","started_at":"2026-08-30T01:00:00+02:00","elapsed_s":7798,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48595","sha":"7f4f094d","prev_sha":"3ff2ae6b","commits":[{"sha":"1eaa83da","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"c408291c","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"b8d01d51","author":"m.keller","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"}],"s":"PFPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPFfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-08-31","started_at":"2026-08-31T01:00:00+02:00","elapsed_s":7588,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48602","sha":"7812f628","prev_sha":"7f4f094d","commits":[],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-09-01","started_at":"2026-09-01T01:00:00+02:00","elapsed_s":7323,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48609","sha":"98fe656a","prev_sha":"7812f628","commits":[{"sha":"c9263289","author":"a.wieland","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"5bd8983b","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"09da6f1d","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPFPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPFP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPFfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-09-02","started_at":"2026-09-02T01:00:00+02:00","elapsed_s":8351,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48616","sha":"87459322","prev_sha":"98fe656a","commits":[{"sha":"978e7f9a","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPPPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPF-PPPPPPPPPffPPPfFfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPPPfPfPPPPPf"},{"run_id":"2026-09-03","started_at":"2026-09-03T01:00:00+02:00","elapsed_s":9347,"release_version":"24.4.0-rc1","version_source":"metadata","pipeline_id":"48623","sha":"8c835461","prev_sha":"87459322","commits":[{"sha":"a3669b49","author":"m.keller","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"17fc3bf9","author":"j.pohl","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPPPPPPPfPPPfPffPPPPPPPP-fffPfPPPPPPPPPPPPfPPffPfPPPfPPPfffPPPfPPPffPFPfPPfPPfPPPPPfPPPfffffPPfffffPfPPPfPfPPPPPPPfffPPPfpffPPP-PPPPPPPPPffPPPfPfffPfffffPfP-fPfPfpfPPfPPfPPPfPPPfPPfPffPPP-PPPPfffPPPfPfPPFPfPfPPPPPf"}],"legend":{"P":"pass","p":"pass, fail-Tag gesetzt","f":"fail, bekannt (fail-Tag)","F":"fail, neu","-":"nicht im Lauf"}};
+const DATA = {"schema":1,"generated":"demo","services":["api-gateway","auth-service","device-registry","ingest-service","calibration-svc","reporting-svc","ui-shell"],"tests":[{"suite":"Smoke","name":"Report Threshold Alarm"},{"suite":"Smoke","name":"Ensure Power Cycle"},{"suite":"Smoke","name":"Validate Unit Conversion"},{"suite":"Smoke","name":"Recover From Sample Rate 48 kHz"},{"suite":"Smoke","name":"Report Config Export"},{"suite":"Smoke","name":"Ensure Temperature Offset"},{"suite":"Smoke","name":"Persist Cold Start"},{"suite":"Smoke","name":"Validate Power Cycle"},{"suite":"Smoke","name":"Validate Zero Point"},{"suite":"Smoke","name":"Detect Sensor Timeout"},{"suite":"Smoke","name":"Reject Bulk Transfer"},{"suite":"Smoke","name":"Reject Checksum Mismatch"},{"suite":"Smoke","name":"Check Threshold Alarm"},{"suite":"Smoke","name":"Ensure Sample Rate 48 kHz"},{"suite":"Smoke","name":"Recover From Firmware Rollback"},{"suite":"Smoke","name":"Reset Concurrent Access"},{"suite":"Smoke","name":"Report Concurrent Access"},{"suite":"Smoke","name":"Reset Baud Rate Switch"},{"suite":"Device.Connection","name":"Recover From Firmware Rollback"},{"suite":"Device.Connection","name":"Report Range Overflow"},{"suite":"Device.Connection","name":"Ensure Firmware Rollback"},{"suite":"Device.Connection","name":"Validate Config Export"},{"suite":"Device.Connection","name":"Validate Multi Channel Sync"},{"suite":"Device.Connection","name":"Verify Concurrent Access"},{"suite":"Device.Connection","name":"Validate Token Refresh"},{"suite":"Device.Connection","name":"Ensure Range Overflow"},{"suite":"Device.Connection","name":"Persist Concurrent Access"},{"suite":"Device.Connection","name":"Reset Unit Conversion"},{"suite":"Device.Connection","name":"Report Session Handshake"},{"suite":"Device.Connection","name":"Reset Locale Fallback"},{"suite":"Device.Connection","name":"Validate Idle Reconnect"},{"suite":"Device.Connection","name":"Reset Watchdog Trip"},{"suite":"Device.Connection","name":"Check Watchdog Trip"},{"suite":"Device.Connection","name":"Reset Firmware Rollback"},{"suite":"Device.Connection","name":"Recover From Config Export"},{"suite":"Device.Connection","name":"Persist Requirement Link"},{"suite":"Device.Connection","name":"Reset Drift Compensation"},{"suite":"Device.Connection","name":"Recover From Sample Rate 48 kHz"},{"suite":"Device.Connection","name":"Report Firmware Rollback"},{"suite":"Device.Connection","name":"Check Locale Fallback"},{"suite":"Device.Connection","name":"Report Multi Channel Sync"},{"suite":"Device.Connection","name":"Recover From Session Handshake"},{"suite":"Device.Firmware","name":"Ensure Sample Rate 48 kHz"},{"suite":"Device.Firmware","name":"Validate Baud Rate Switch"},{"suite":"Device.Firmware","name":"Reset Requirement Link"},{"suite":"Device.Firmware","name":"Detect Partial Payload"},{"suite":"Device.Firmware","name":"Check Temperature Offset"},{"suite":"Device.Firmware","name":"Validate Idle Reconnect"},{"suite":"Device.Firmware","name":"Check Baud Rate Switch"},{"suite":"Device.Firmware","name":"Reset Watchdog Trip"},{"suite":"Device.Firmware","name":"Check Session Handshake"},{"suite":"Device.Firmware","name":"Check Sensor Timeout"},{"suite":"Device.Firmware","name":"Verify Config Export"},{"suite":"Device.Firmware","name":"Recover From Multi Channel Sync"},{"suite":"Device.Firmware","name":"Reset Concurrent Access"},{"suite":"Device.Firmware","name":"Check Range Overflow"},{"suite":"Device.Firmware","name":"Reject Session Handshake"},{"suite":"Device.Firmware","name":"Check Locale Fallback"},{"suite":"Device.Firmware","name":"Recover From Idle Reconnect"},{"suite":"Device.Firmware","name":"Detect Unit Conversion"},{"suite":"Device.Firmware","name":"Reject Bulk Transfer"},{"suite":"Device.Firmware","name":"Verify Baud Rate Switch"},{"suite":"Device.Firmware","name":"Report Unit Conversion"},{"suite":"Measurement.Calibration","name":"Recover From Requirement Link"},{"suite":"Measurement.Calibration","name":"Reset Zero Point"},{"suite":"Measurement.Calibration","name":"Reset Cold Start"},{"suite":"Measurement.Calibration","name":"Detect Drift Compensation"},{"suite":"Measurement.Calibration","name":"Persist Token Refresh"},{"suite":"Measurement.Calibration","name":"Recover From Drift Compensation"},{"suite":"Measurement.Calibration","name":"Ensure Zero Point"},{"suite":"Measurement.Calibration","name":"Report Firmware Rollback"},{"suite":"Measurement.Calibration","name":"Reject Temperature Offset"},{"suite":"Measurement.Calibration","name":"Ensure Temperature Offset"},{"suite":"Measurement.Calibration","name":"Verify Requirement Link"},{"suite":"Measurement.Calibration","name":"Reject Checksum Mismatch"},{"suite":"Measurement.Calibration","name":"Recover From Threshold Alarm"},{"suite":"Measurement.Calibration","name":"Reset Checksum Mismatch"},{"suite":"Measurement.Calibration","name":"Persist Multi Channel Sync"},{"suite":"Measurement.Calibration","name":"Check Unit Conversion"},{"suite":"Measurement.Calibration","name":"Persist Unit Conversion"},{"suite":"Measurement.Calibration","name":"Validate Range Overflow"},{"suite":"Measurement.Calibration","name":"Recover From Token Refresh"},{"suite":"Measurement.Calibration","name":"Verify Firmware Rollback"},{"suite":"Measurement.Calibration","name":"Recover From Concurrent Access"},{"suite":"Measurement.Calibration","name":"Verify Config Export"},{"suite":"Measurement.Calibration","name":"Ensure Config Export"},{"suite":"Measurement.Calibration","name":"Report Locale Fallback"},{"suite":"Measurement.Calibration","name":"Ensure Unit Conversion"},{"suite":"Measurement.Calibration","name":"Check Sensor Timeout"},{"suite":"Measurement.Calibration","name":"Reject Multi Channel Sync"},{"suite":"Measurement.Calibration","name":"Reset Temperature Offset"},{"suite":"Measurement.Calibration","name":"Detect Power Cycle"},{"suite":"Measurement.Calibration","name":"Verify Zero Point"},{"suite":"Measurement.Calibration","name":"Recover From Sensor Timeout"},{"suite":"Measurement.Streaming","name":"Recover From Multi Channel Sync"},{"suite":"Measurement.Streaming","name":"Ensure Drift Compensation"},{"suite":"Measurement.Streaming","name":"Ensure Cold Start"},{"suite":"Measurement.Streaming","name":"Reset Partial Payload"},{"suite":"Measurement.Streaming","name":"Detect Threshold Alarm"},{"suite":"Measurement.Streaming","name":"Reject Token Refresh"},{"suite":"Measurement.Streaming","name":"Report Cold Start"},{"suite":"Measurement.Streaming","name":"Persist Sample Rate 48 kHz"},{"suite":"Measurement.Streaming","name":"Recover From Locale Fallback"},{"suite":"Measurement.Streaming","name":"Report Sample Rate 48 kHz"},{"suite":"Measurement.Streaming","name":"Ensure Range Overflow"},{"suite":"Measurement.Streaming","name":"Report Temperature Offset"},{"suite":"Measurement.Streaming","name":"Check Partial Payload"},{"suite":"Measurement.Streaming","name":"Verify Sensor Timeout"},{"suite":"Measurement.Streaming","name":"Check Temperature Offset"},{"suite":"Measurement.Streaming","name":"Validate Baud Rate Switch"},{"suite":"Measurement.Streaming","name":"Report Session Handshake"},{"suite":"Measurement.Streaming","name":"Detect Watchdog Trip"},{"suite":"Measurement.Streaming","name":"Detect Firmware Rollback"},{"suite":"Measurement.Streaming","name":"Persist Power Cycle"},{"suite":"Measurement.Streaming","name":"Report Range Overflow"},{"suite":"Measurement.Streaming","name":"Validate Drift Compensation"},{"suite":"Measurement.Streaming","name":"Report Threshold Alarm"},{"suite":"Measurement.Streaming","name":"Detect Power Cycle"},{"suite":"Measurement.Streaming","name":"Check Watchdog Trip"},{"suite":"Measurement.Streaming","name":"Reject Config Export"},{"suite":"Measurement.Streaming","name":"Persist Bulk Transfer"},{"suite":"Requirements.Traceability","name":"Persist Zero Point"},{"suite":"Requirements.Traceability","name":"Validate Drift Compensation"},{"suite":"Requirements.Traceability","name":"Check Config Export"},{"suite":"Requirements.Traceability","name":"Persist Multi Channel Sync"},{"suite":"Requirements.Traceability","name":"Recover From Sample Rate 48 kHz"},{"suite":"Requirements.Traceability","name":"Persist Sample Rate 48 kHz"},{"suite":"Requirements.Traceability","name":"Check Zero Point"},{"suite":"Requirements.Traceability","name":"Reset Zero Point"},{"suite":"Requirements.Traceability","name":"Verify Session Handshake"},{"suite":"Requirements.Traceability","name":"Reject Firmware Rollback"},{"suite":"Requirements.Traceability","name":"Reject Baud Rate Switch"},{"suite":"Requirements.Traceability","name":"Reject Session Handshake"},{"suite":"Requirements.Traceability","name":"Detect Checksum Mismatch"},{"suite":"Requirements.Traceability","name":"Check Unit Conversion"},{"suite":"Requirements.Traceability","name":"Reset Power Cycle"},{"suite":"Requirements.Traceability","name":"Check Baud Rate Switch"},{"suite":"API.Rest","name":"Report Sensor Timeout"},{"suite":"API.Rest","name":"Recover From Sensor Timeout"},{"suite":"API.Rest","name":"Verify Config Import"},{"suite":"API.Rest","name":"Validate Drift Compensation"},{"suite":"API.Rest","name":"Reset Config Export"},{"suite":"API.Rest","name":"Verify Cold Start"},{"suite":"API.Rest","name":"Reset Partial Payload"},{"suite":"API.Rest","name":"Detect Session Handshake"},{"suite":"API.Rest","name":"Persist Locale Fallback"},{"suite":"API.Rest","name":"Check Zero Point"},{"suite":"API.Rest","name":"Reset Session Handshake"},{"suite":"API.Rest","name":"Recover From Checksum Mismatch"},{"suite":"API.Rest","name":"Ensure Idle Reconnect"},{"suite":"API.Rest","name":"Persist Checksum Mismatch"},{"suite":"API.Rest","name":"Ensure Threshold Alarm"},{"suite":"API.Rest","name":"Recover From Temperature Offset"},{"suite":"API.Rest","name":"Check Concurrent Access"},{"suite":"API.Rest","name":"Persist Zero Point"},{"suite":"API.Rest","name":"Verify Firmware Rollback"},{"suite":"API.Rest","name":"Detect Temperature Offset"},{"suite":"API.Rest","name":"Check Unit Conversion"},{"suite":"API.Rest","name":"Validate Partial Payload"},{"suite":"API.Rest","name":"Reject Checksum Mismatch"},{"suite":"API.Rest","name":"Report Threshold Alarm"},{"suite":"API.Rest","name":"Ensure Power Cycle"},{"suite":"API.Rest","name":"Recover From Token Refresh"},{"suite":"API.Rest","name":"Detect Drift Compensation"},{"suite":"API.Rest","name":"Ensure Session Handshake"},{"suite":"API.Rest","name":"Check Watchdog Trip"},{"suite":"API.Websocket","name":"Persist Watchdog Trip"},{"suite":"API.Websocket","name":"Verify Power Cycle"},{"suite":"API.Websocket","name":"Ensure Token Refresh"},{"suite":"API.Websocket","name":"Persist Config Import"},{"suite":"API.Websocket","name":"Persist Cold Start"},{"suite":"API.Websocket","name":"Validate Unit Conversion"},{"suite":"API.Websocket","name":"Check Zero Point"},{"suite":"API.Websocket","name":"Ensure Bulk Transfer"},{"suite":"API.Websocket","name":"Persist Partial Payload"},{"suite":"API.Websocket","name":"Detect Config Import"},{"suite":"API.Websocket","name":"Reset Bulk Transfer"},{"suite":"API.Websocket","name":"Reject Concurrent Access"},{"suite":"API.Websocket","name":"Detect Sensor Timeout"},{"suite":"API.Websocket","name":"Detect Threshold Alarm"},{"suite":"API.Websocket","name":"Detect Zero Point"},{"suite":"API.Websocket","name":"Validate Checksum Mismatch"},{"suite":"API.Websocket","name":"Check Concurrent Access"},{"suite":"API.Websocket","name":"Verify Multi Channel Sync"},{"suite":"API.Websocket","name":"Check Drift Compensation"},{"suite":"UI.Configuration","name":"Reset Firmware Rollback"},{"suite":"UI.Configuration","name":"Report Watchdog Trip"},{"suite":"UI.Configuration","name":"Reset Token Refresh"},{"suite":"UI.Configuration","name":"Reject Drift Compensation"},{"suite":"UI.Configuration","name":"Detect Cold Start"},{"suite":"UI.Configuration","name":"Reset Idle Reconnect"},{"suite":"UI.Configuration","name":"Ensure Baud Rate Switch"},{"suite":"UI.Configuration","name":"Recover From Zero Point"},{"suite":"UI.Configuration","name":"Check Multi Channel Sync"},{"suite":"UI.Configuration","name":"Reset Sample Rate 48 kHz"},{"suite":"UI.Configuration","name":"Verify Temperature Offset"},{"suite":"UI.Configuration","name":"Validate Firmware Rollback"},{"suite":"UI.Configuration","name":"Persist Config Import"},{"suite":"UI.Configuration","name":"Reject Unit Conversion"},{"suite":"UI.Configuration","name":"Persist Temperature Offset"},{"suite":"UI.Configuration","name":"Report Checksum Mismatch"},{"suite":"UI.Configuration","name":"Validate Range Overflow"},{"suite":"UI.Configuration","name":"Reject Threshold Alarm"},{"suite":"UI.Configuration","name":"Ensure Config Import"},{"suite":"UI.Configuration","name":"Validate Config Import"},{"suite":"Smoke","name":"Check Session Handshake 205"},{"suite":"Measurement.Calibration","name":"Detect Sample Rate 48 kHz 206"},{"suite":"Device.Firmware","name":"Check Config Import 207"},{"suite":"Requirements.Traceability","name":"Ensure Sensor Timeout 208"},{"suite":"UI.Configuration","name":"Detect Cold Start 209"},{"suite":"UI.Configuration","name":"Reject Unit Conversion 210"},{"suite":"Device.Connection","name":"Reset Bulk Transfer 211"},{"suite":"UI.Configuration","name":"Reset Token Refresh 212"},{"suite":"Measurement.Calibration","name":"Detect Config Export 213"}],"runs":[{"run_id":"2026-07-06","started_at":"2026-07-06T01:00:00+02:00","elapsed_s":8314,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.2.1","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48210","sha":"486ad6c4","prev_sha":"14b22388","commits":[],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPF-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PFPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-07","started_at":"2026-07-07T01:00:00+02:00","elapsed_s":8539,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.2.1","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48217","sha":"aa72fe9a","prev_sha":"486ad6c4","commits":[{"sha":"e0d0b5c4","author":"j.pohl","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"},{"sha":"5f21621d","author":"s.brandt","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"e74543a3","author":"a.wieland","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"452bb93e","author":"m.keller","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"}],"s":"PPffPPPPffPfPFP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPF-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffF-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-08","started_at":"2026-07-08T01:00:00+02:00","elapsed_s":9280,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.2.1","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48224","sha":"c919edfd","prev_sha":"aa72fe9a","commits":[{"sha":"2f8c5531","author":"s.brandt","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"37763d13","author":"t.ruf","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"2fac09bf","author":"a.wieland","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"e689e762","author":"a.wieland","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"b207a0c2","author":"a.wieland","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"},{"sha":"4f0a3a84","author":"t.ruf","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPF-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpFPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-09","started_at":"2026-07-09T01:00:00+02:00","elapsed_s":6949,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48231","sha":"4d834a13","prev_sha":"c919edfd","commits":[{"sha":"ddff4394","author":"m.keller","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"caa0a60f","author":"a.wieland","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"b276136a","author":"j.pohl","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"6cc10525","author":"s.brandt","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"}],"s":"PPffPPPPffPfPFP-fPPPfPPPfPfPfffffPfffFPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPFfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-10","started_at":"2026-07-10T01:00:00+02:00","elapsed_s":6970,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48238","sha":"786cdedb","prev_sha":"4d834a13","commits":[{"sha":"8f77590e","author":"j.pohl","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPFfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-11","started_at":"2026-07-11T01:00:00+02:00","elapsed_s":6875,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.9.7","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48245","sha":"cef00144","prev_sha":"786cdedb","commits":[{"sha":"d3c7c77b","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"35aef81d","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"0754c71a","author":"j.pohl","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"1c73ac65","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"77ce0c4a","author":"t.ruf","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"},{"sha":"51c0fe5c","author":"t.ruf","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffFPPfPfPPPPPF-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-12","started_at":"2026-07-12T01:00:00+02:00","elapsed_s":6897,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48252","sha":"5e86e524","prev_sha":"cef00144","commits":[{"sha":"0e28696a","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"bf156902","author":"t.ruf","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"bc89edf1","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffFPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-13","started_at":"2026-07-13T01:00:00+02:00","elapsed_s":9340,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.9","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48259","sha":"821fcb4f","prev_sha":"5e86e524","commits":[{"sha":"a10d509f","author":"t.ruf","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"}],"s":"PPffPPFPffPfPFP-fPPPfPPPfPfPfffffPfffFPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-14","started_at":"2026-07-14T01:00:00+02:00","elapsed_s":7052,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48266","sha":"52817dd2","prev_sha":"821fcb4f","commits":[{"sha":"8220711e","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"5d170bfd","author":"s.brandt","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"2dad5c20","author":"a.wieland","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"519401f4","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"8bef3310","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"79539a11","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPffPPPPffPfPFP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPF-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpFPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-15","started_at":"2026-07-15T01:00:00+02:00","elapsed_s":7568,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48273","sha":"22d482e4","prev_sha":"52817dd2","commits":[{"sha":"987a0c8e","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"7c9c309c","author":"j.pohl","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"},{"sha":"53f494ce","author":"j.pohl","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"1e7bf360","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"9a42d4bf","author":"a.wieland","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"0bf4ce45","author":"j.pohl","subject":"fail:DEV-572 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPFPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-16","started_at":"2026-07-16T01:00:00+02:00","elapsed_s":7828,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48280","sha":"cf87b887","prev_sha":"22d482e4","commits":[],"s":"PPffPPPPffPfPFP-fPPPfPPPfPfPfffffPfffFPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-17","started_at":"2026-07-17T01:00:00+02:00","elapsed_s":8492,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.0","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48287","sha":"07a56e8b","prev_sha":"cf87b887","commits":[{"sha":"3b33626a","author":"a.wieland","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPF-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPFPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPFPPPffPpFPPfFfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-18","started_at":"2026-07-18T01:00:00+02:00","elapsed_s":7862,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"suite_doc","pipeline_id":"48294","sha":"91760670","prev_sha":"07a56e8b","commits":[{"sha":"d5b66d8c","author":"a.wieland","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"7948821e","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"6516b769","author":"m.keller","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"c7c0488f","author":"m.keller","subject":"fail:DEV-593 Tag entfernt, Test laeuft wieder"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPFPfFfPffPPPPPP-PPffPFf"},{"run_id":"2026-07-19","started_at":"2026-07-19T01:00:00+02:00","elapsed_s":7789,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"metadata","pipeline_id":"48301","sha":"e4c2c188","prev_sha":"91760670","commits":[{"sha":"6f5bab6f","author":"t.ruf","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.0 gehoben"},{"sha":"6446a617","author":"j.pohl","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"74379434","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPFPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-20","started_at":"2026-07-20T01:00:00+02:00","elapsed_s":7318,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.4","reporting-svc":"4.0.10","ui-shell":"12.6.0"},"version_source":"metadata","pipeline_id":"48308","sha":"b7a0c402","prev_sha":"e4c2c188","commits":[],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPFfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpFPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-21","started_at":"2026-07-21T01:00:00+02:00","elapsed_s":9042,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.5","reporting-svc":"4.0.11","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48315","sha":"bfd63ef9","prev_sha":"b7a0c402","commits":[{"sha":"ca0f7858","author":"m.keller","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"4a32494f","author":"m.keller","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"ee4d2b1e","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"6940f26a","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"6ee81388","author":"m.keller","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpFPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-22","started_at":"2026-07-22T01:00:00+02:00","elapsed_s":8777,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.5","reporting-svc":"4.0.11","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48322","sha":"2cd3f251","prev_sha":"bfd63ef9","commits":[{"sha":"f75de59e","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"768b478e","author":"a.wieland","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"c62c1f43","author":"t.ruf","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-24","started_at":"2026-07-24T01:00:00+02:00","elapsed_s":7198,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48336","sha":"662a4474","prev_sha":"2cd3f251","commits":[{"sha":"c90ea6ab","author":"j.pohl","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"c76ede3f","author":"j.pohl","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.1 gehoben"},{"sha":"f0bc22e9","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-FfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-25","started_at":"2026-07-25T01:00:00+02:00","elapsed_s":8625,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"5.3.1","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48343","sha":"c8c0c141","prev_sha":"662a4474","commits":[{"sha":"3589e7df","author":"t.ruf","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPFpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpFPPfFfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-26","started_at":"2026-07-26T01:00:00+02:00","elapsed_s":7854,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48350","sha":"418fa9f4","prev_sha":"c8c0c141","commits":[{"sha":"de0c461a","author":"m.keller","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"dc45aeb5","author":"t.ruf","subject":"fail:DEV-651 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfFfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-27","started_at":"2026-07-27T01:00:00+02:00","elapsed_s":8005,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.0","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48357","sha":"d717db7a","prev_sha":"418fa9f4","commits":[{"sha":"0b77b19b","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"9d4a15b7","author":"j.pohl","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.1 gehoben"},{"sha":"af2e8459","author":"s.brandt","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPFfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPFPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-28","started_at":"2026-07-28T01:00:00+02:00","elapsed_s":8410,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48364","sha":"9a183308","prev_sha":"d717db7a","commits":[{"sha":"21247804","author":"m.keller","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"f2f69de4","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"b1a88dcd","author":"m.keller","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"6fd309f0","author":"m.keller","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"f4abd40e","author":"s.brandt","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPffPPPPffPfPFP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-29","started_at":"2026-07-29T01:00:00+02:00","elapsed_s":7112,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.1"},"version_source":"metadata","pipeline_id":"48371","sha":"726fd5ea","prev_sha":"9a183308","commits":[],"s":"PPffPPFPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPFPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPFPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-30","started_at":"2026-07-30T01:00:00+02:00","elapsed_s":8007,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.2"},"version_source":"metadata","pipeline_id":"48378","sha":"8b338cf3","prev_sha":"726fd5ea","commits":[],"s":"PPffPPPPffPfPFP-fPFPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-07-31","started_at":"2026-07-31T01:00:00+02:00","elapsed_s":6956,"components":{"api-gateway":"3.4.0","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"6.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.6.2"},"version_source":"metadata","pipeline_id":"48385","sha":"1917dd7e","prev_sha":"8b338cf3","commits":[{"sha":"1f88e72b","author":"s.brandt","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"ce0e9620","author":"a.wieland","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"0e67831e","author":"j.pohl","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.2 gehoben"},{"sha":"1fa11ced","author":"a.wieland","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"a26b4826","author":"m.keller","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"},{"sha":"fb59ae5e","author":"m.keller","subject":"Doku der Suite-Metadaten auf ui-shell 12.6.2 gehoben"}],"s":"PPffPPFPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-08-01","started_at":"2026-08-01T01:00:00+02:00","elapsed_s":8632,"components":{"api-gateway":"3.4.1","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48392","sha":"972d8b0f","prev_sha":"1917dd7e","commits":[{"sha":"a5697b00","author":"s.brandt","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPffPPFPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPFPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-FPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPPPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-08-02","started_at":"2026-08-02T01:00:00+02:00","elapsed_s":7125,"components":{"api-gateway":"3.4.1","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48399","sha":"ca1decf0","prev_sha":"972d8b0f","commits":[],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPFPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-08-03","started_at":"2026-08-03T01:00:00+02:00","elapsed_s":7381,"components":{"api-gateway":"3.4.1","auth-service":"2.14.2","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48406","sha":"82dcd48a","prev_sha":"ca1decf0","commits":[{"sha":"8292d142","author":"t.ruf","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"},{"sha":"184cd7df","author":"s.brandt","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"1435b8a6","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"f2e0e74d","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"b6b334c1","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"4c5c2869","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPffPPPPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPPfPPPPPffPpPFPfPfPffPPPPPP-PPffPPf"},{"run_id":"2026-08-04","started_at":"2026-08-04T01:00:00+02:00","elapsed_s":8580,"components":{"api-gateway":"3.4.1","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48413","sha":"60767ae7","prev_sha":"82dcd48a","commits":[{"sha":"80c41fc7","author":"t.ruf","subject":"fail:DEV-734 Tag entfernt, Test laeuft wieder"},{"sha":"7642706f","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPffPPFPffPfPPP-fPPPfPPPfPfPfffffPfffPPPfPfPPPPPP-PPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffP-fPPfffPffPPPPfPPPfPfPPPPffPf-PPPfPffPfPPPPffPPPP-PfPPfPFfPPPPPffPpPPPfFfPffPPPPPP-PPffPPf"},{"run_id":"2026-08-05","started_at":"2026-08-05T01:00:00+02:00","elapsed_s":8392,"components":{"api-gateway":"3.4.1","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.31.5","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48420","sha":"d3b8da8e","prev_sha":"60767ae7","commits":[{"sha":"5f761502","author":"j.pohl","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"36b0cea2","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"4df5bd3a","author":"a.wieland","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"f7ce559f","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"f711b30f","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffFPPfPfPPPPPPPPPPpPFPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-06","started_at":"2026-08-06T01:00:00+02:00","elapsed_s":7599,"components":{"api-gateway":"3.4.1","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.12","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48427","sha":"4052eb74","prev_sha":"d3b8da8e","commits":[],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpFFPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-07","started_at":"2026-08-07T01:00:00+02:00","elapsed_s":7180,"components":{"api-gateway":"3.4.1","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48434","sha":"3506f3cf","prev_sha":"4052eb74","commits":[{"sha":"575e2339","author":"s.brandt","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPffPPFPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPFPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-08","started_at":"2026-08-08T01:00:00+02:00","elapsed_s":8115,"components":{"api-gateway":"3.5.0","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48441","sha":"72377cbb","prev_sha":"3506f3cf","commits":[],"s":"PPffPPFPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-09","started_at":"2026-08-09T01:00:00+02:00","elapsed_s":9020,"components":{"api-gateway":"3.5.0","auth-service":"2.14.3","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48448","sha":"790605d8","prev_sha":"72377cbb","commits":[{"sha":"da1c25ec","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"3a3dbfbb","author":"s.brandt","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"81425713","author":"t.ruf","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"},{"sha":"f42bda1a","author":"a.wieland","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"ad025e47","author":"a.wieland","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPfffFPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfFfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-10","started_at":"2026-08-10T01:00:00+02:00","elapsed_s":8360,"components":{"api-gateway":"3.5.0","auth-service":"2.14.4","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48455","sha":"ec3cf252","prev_sha":"790605d8","commits":[{"sha":"45eb3081","author":"s.brandt","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"cf8ff024","author":"m.keller","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"5fd955f4","author":"t.ruf","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"54581944","author":"a.wieland","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPFPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPFPfFfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-11","started_at":"2026-08-11T01:00:00+02:00","elapsed_s":7297,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48462","sha":"59a70061","prev_sha":"ec3cf252","commits":[{"sha":"509741a6","author":"m.keller","subject":"fail:DEV-796 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"744435a5","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpFFPfFfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-12","started_at":"2026-08-12T01:00:00+02:00","elapsed_s":9355,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.32.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48469","sha":"1610fa78","prev_sha":"59a70061","commits":[{"sha":"c51ac012","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfPPfPfPPffPPPfPPPfPPPPPfffPfPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfFfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-13","started_at":"2026-08-13T01:00:00+02:00","elapsed_s":8279,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.1","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48476","sha":"14e47b10","prev_sha":"1610fa78","commits":[{"sha":"dcd940eb","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPFPPPpPPPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPFPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-14","started_at":"2026-08-14T01:00:00+02:00","elapsed_s":8008,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48483","sha":"0b20c6dc","prev_sha":"14e47b10","commits":[{"sha":"0b37d752","author":"m.keller","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"3c849563","author":"a.wieland","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"5e347ca4","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"b98d8a11","author":"a.wieland","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"898bfed0","author":"j.pohl","subject":"fail:DEV-829 Tag entfernt, Test laeuft wieder"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPFPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPFfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-15","started_at":"2026-08-15T01:00:00+02:00","elapsed_s":9203,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48490","sha":"c25e74ee","prev_sha":"0b20c6dc","commits":[{"sha":"437fe40e","author":"s.brandt","subject":"fail:DEV-830 Tag entfernt, Test laeuft wieder"},{"sha":"388b334a","author":"j.pohl","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffFPPfPfPPPFPFPPPPpPPPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfFfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-17","started_at":"2026-08-17T01:00:00+02:00","elapsed_s":7108,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48504","sha":"d908d1d5","prev_sha":"c25e74ee","commits":[{"sha":"832eaf04","author":"a.wieland","subject":"fail:DEV-834 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"4ffa7906","author":"j.pohl","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"c79c4bdd","author":"a.wieland","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"3316301a","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"9504bced","author":"s.brandt","subject":"Assertion-Message bei Range Overflow praezisiert"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPFPPPPpPPPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpFPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-18","started_at":"2026-08-18T01:00:00+02:00","elapsed_s":7314,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48511","sha":"f1d69465","prev_sha":"d908d1d5","commits":[],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPFPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpPPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-19","started_at":"2026-08-19T01:00:00+02:00","elapsed_s":7058,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.13","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48518","sha":"ec89a02c","prev_sha":"f1d69465","commits":[{"sha":"b33e6952","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"666f6840","author":"m.keller","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"},{"sha":"d2b54be5","author":"s.brandt","subject":"fail:DEV-863 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"c5eabd13","author":"t.ruf","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"3801cdc8","author":"a.wieland","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPfPfPPPPPPPPPPpPPPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffFPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfPPfPPfPPPPPffPpFFPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-20","started_at":"2026-08-20T01:00:00+02:00","elapsed_s":7169,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48525","sha":"4f8ec648","prev_sha":"ec89a02c","commits":[],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPfffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPffPPffPfFPfPfPPffFPPfPFFfFFFFPfffPfPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfFPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PffPpFPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-21","started_at":"2026-08-21T01:00:00+02:00","elapsed_s":7516,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.2","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48532","sha":"426ed85b","prev_sha":"4f8ec648","commits":[{"sha":"3866c795","author":"s.brandt","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"},{"sha":"db6dab72","author":"j.pohl","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"5c7d5696","author":"m.keller","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"bd657064","author":"s.brandt","subject":"Flaky Sleep durch Wait Until Keyword Succeeds ersetzt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfFPfPfPPffFPPfPFFfFFFFPfffPPPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpFPPfFfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-22","started_at":"2026-08-22T01:00:00+02:00","elapsed_s":7017,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48539","sha":"099b40bd","prev_sha":"426ed85b","commits":[{"sha":"a657452c","author":"a.wieland","subject":"fail:DEV-892 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"f43c53f2","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPFPffPPfPffPPPPfPPffPfFPfPfPPffFPPfPFFfFFFFPfffPPPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPFPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-23","started_at":"2026-08-23T01:00:00+02:00","elapsed_s":8612,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48546","sha":"5df006a1","prev_sha":"099b40bd","commits":[{"sha":"3a62e862","author":"m.keller","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"63332636","author":"j.pohl","subject":"Neue Testfaelle fuer Kalibrier-Offset ergaenzt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfFPfPfPPffFPPfPFFfFFFFPfffPPPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-24","started_at":"2026-08-24T01:00:00+02:00","elapsed_s":8763,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.0.0","calibration-svc":"0.33.0","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48553","sha":"eeb497d7","prev_sha":"5df006a1","commits":[{"sha":"e68ad2a3","author":"m.keller","subject":"fail:DEV-913 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPFPPPPpPPPffPPfPffPPPPfPPffPfFPfPfPPffFPPfPFFfFFFFPfffPPPfPPPFFPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPPPfPfPffPPPPPPFPPffPPf"},{"run_id":"2026-08-25","started_at":"2026-08-25T01:00:00+02:00","elapsed_s":7300,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.1.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48560","sha":"92a68737","prev_sha":"eeb497d7","commits":[{"sha":"851a1748","author":"s.brandt","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"1044e3c2","author":"t.ruf","subject":"Assertion-Message bei Range Overflow praezisiert"},{"sha":"f69daf9e","author":"j.pohl","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"a5bc4503","author":"a.wieland","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"d52a8f3a","author":"s.brandt","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-26","started_at":"2026-08-26T01:00:00+02:00","elapsed_s":6814,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.1.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48567","sha":"855f7ce4","prev_sha":"92a68737","commits":[{"sha":"daeac652","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"6bf4084b","author":"t.ruf","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"50cf03dd","author":"m.keller","subject":"fail:DEV-953 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPFPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-27","started_at":"2026-08-27T01:00:00+02:00","elapsed_s":9358,"components":{"api-gateway":"3.5.0","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48574","sha":"d7c611d5","prev_sha":"855f7ce4","commits":[{"sha":"99177e1d","author":"j.pohl","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"73e215ba","author":"a.wieland","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"03ca1cf6","author":"m.keller","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"0136cd3f","author":"s.brandt","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPffPPFPffPfPFPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPFPfFfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-28","started_at":"2026-08-28T01:00:00+02:00","elapsed_s":7881,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48581","sha":"5a10245d","prev_sha":"d7c611d5","commits":[{"sha":"1dffad1c","author":"m.keller","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffFPPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-29","started_at":"2026-08-29T01:00:00+02:00","elapsed_s":8836,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48588","sha":"a2aaa7fc","prev_sha":"5a10245d","commits":[{"sha":"d03203ea","author":"j.pohl","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"ac211c31","author":"s.brandt","subject":"Aufraeumen: ungenutzte Variablen aus common.resource entfernt"},{"sha":"5bedfc8c","author":"s.brandt","subject":"Warte-Keyword fuer Firmware-Handshake robuster gemacht"},{"sha":"66a47486","author":"j.pohl","subject":"Testdaten fuer Streaming-Suite aktualisiert"},{"sha":"831d1016","author":"s.brandt","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPFPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfFPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpFPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-30","started_at":"2026-08-30T01:00:00+02:00","elapsed_s":8000,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48595","sha":"d219cd60","prev_sha":"a2aaa7fc","commits":[{"sha":"3d279ad1","author":"t.ruf","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"48ef27a6","author":"a.wieland","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"},{"sha":"a6d6b7c9","author":"m.keller","subject":"Requirements-Mapping auf neue REQ-IDs umgestellt"},{"sha":"9e17c0ac","author":"t.ruf","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"3dea686a","author":"s.brandt","subject":"Doku der Suite-Metadaten auf ui-shell 12.7.0 gehoben"}],"s":"PPffPPFPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-PPFPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPFPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-08-31","started_at":"2026-08-31T01:00:00+02:00","elapsed_s":6874,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.0"},"version_source":"metadata","pipeline_id":"48602","sha":"53955a8f","prev_sha":"d219cd60","commits":[{"sha":"d6adab6a","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"126d7fc2","author":"t.ruf","subject":"fail:DEV-1028 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"7441abb2","author":"a.wieland","subject":"Resource: Timeout von 30s auf 45s erhoeht"},{"sha":"93ad542e","author":"s.brandt","subject":"Testdaten fuer Streaming-Suite aktualisiert"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPPPf-fPP-FPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpPPPfPfPffPPPPPPPFPffPPf"},{"run_id":"2026-09-01","started_at":"2026-09-01T01:00:00+02:00","elapsed_s":7644,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.1"},"version_source":"metadata","pipeline_id":"48609","sha":"8a0640d3","prev_sha":"53955a8f","commits":[{"sha":"446e49d9","author":"t.ruf","subject":"fail:DEV-1036 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"5053e4b8","author":"a.wieland","subject":"fail:DEV-1037 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"060f2068","author":"s.brandt","subject":"Setup: VM-Provisionierung nutzt jetzt Poetry-Lockfile"},{"sha":"d4d64133","author":"m.keller","subject":"fail:DEV-1043 Tag entfernt, Test laeuft wieder"}],"s":"PPffPPPPffPfPFPPfPPPfPPPfPfPfffffPPffPPPf-fPP-FPFPPPPpPFPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpFPPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-09-02","started_at":"2026-09-02T01:00:00+02:00","elapsed_s":6982,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.2.1","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.1"},"version_source":"metadata","pipeline_id":"48616","sha":"2ebee9ad","prev_sha":"8a0640d3","commits":[{"sha":"2a950b74","author":"t.ruf","subject":"Resource: Timeout von 30s auf 45s erhoeht"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffFPPf-fPP-PPFPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfPPP-PPfPpFFPfPfPffPPPPPPPPPffPPf"},{"run_id":"2026-09-03","started_at":"2026-09-03T01:00:00+02:00","elapsed_s":7447,"components":{"api-gateway":"3.5.1","auth-service":"2.15.0","device-registry":"1.10.3","ingest-service":"7.3.0","calibration-svc":"0.33.1","reporting-svc":"4.0.14","ui-shell":"12.7.1"},"version_source":"metadata","pipeline_id":"48623","sha":"97feb871","prev_sha":"2ebee9ad","commits":[{"sha":"c229536b","author":"t.ruf","subject":"fail:DEV-1047 Tag gesetzt (Firmware-Bug, siehe Ticket)"},{"sha":"d2288f24","author":"s.brandt","subject":"Library: Reconnect-Logik in DeviceKeywords vereinheitlicht"},{"sha":"206f6154","author":"t.ruf","subject":"Retry fuer Websocket-Verbindungsaufbau ergaenzt"},{"sha":"16996e08","author":"m.keller","subject":"fail:DEV-1061 Tag gesetzt (Firmware-Bug, siehe Ticket)"}],"s":"PPffPPPPffPfPPPPfPPPfPPPfPfPfffffPPffPFPf-fPP-PPPPPPPpPPPffPPfPffPPPPfPPffPfPPfPfPPffPPPfPPPfPPPPPfffPPPfPPPPPPPfffffPPPfffPPfPPfffPffPPPPfPPPfPfPPPPffPfPPPPfPffPfPPPPffPPPPPPfP-fPPfFPP-FPfPpPFPfPfPffPPPPPPPPPffPPf"}],"legend":{"P":"pass","p":"pass, fail-Tag gesetzt","f":"fail, bekannt (fail-Tag)","F":"fail, neu","-":"nicht im Lauf"}};
 </script>
 <script>
 /* Gemeinsamer Kern der drei Vorschau-Layouts: Dekodierung, Kennzahlen,
@@ -418,8 +581,9 @@ const DATA = {"schema":1,"generated":"demo","tests":[{"suite":"Smoke","name":"Re
    externe Chart-Library - die spaetere GitLab-Instanz hat im Browser-Kontext
    oft keinen Internetzugang, also wird auch produktiv nichts nachgeladen. */
 
-const RUNS  = DATA.runs;
-const TESTS = DATA.tests;
+const RUNS     = DATA.runs;
+const TESTS    = DATA.tests;
+const SERVICES = DATA.services;
 
 /* Statuscodes: P pass · p pass mit fail-Tag · f bekannter Fail · F neuer Fail
    · '-' im Lauf nicht vorhanden */
@@ -485,19 +649,49 @@ const DIFF_META = {
 const DIFFS = RUNS.map((r, i) => diff(i > 0 ? RUNS[i - 1] : null, r));
 const COUNTS = RUNS.map(counts);
 
-/* Versionsabschnitte: zusammenhaengende Laufbereiche gleicher Release-Version */
-function versionSpans() {
+/* Der Prueflung ist ein Verbund von Microservices, jeder mit eigener Versionierung.
+   Es gibt also kein "das Release", sondern je Service eine eigene Versionsspur. */
+
+/* Zusammenhaengende Laufbereiche gleicher Version - je Service eine Liste. */
+function versionSpans(service) {
   const spans = [];
   RUNS.forEach((r, i) => {
+    const v = r.components ? r.components[service] : undefined;
     const last = spans[spans.length - 1];
-    if (last && last.version === r.release_version) last.end = i;
-    else spans.push({ version: r.release_version, start: i, end: i, idx: spans.length });
+    if (last && last.version === v) last.end = i;
+    else spans.push({ version: v, start: i, end: i, idx: spans.length });
   });
   return spans;
 }
-const VSPANS = versionSpans();
+const VSPANS_BY_SERVICE = Object.fromEntries(SERVICES.map((s) => [s, versionSpans(s)]));
 const VCOLORS = ["--v1", "--v2", "--v3", "--v4"];
 const VINKS   = ["--v-ink-1", "--v-ink-2", "--v-ink-3", "--v-ink-4"];
+
+/* Welche Services haben zwischen zwei Laeufen die Version gewechselt? */
+function componentDiff(prevRun, run) {
+  const out = [];
+  if (!prevRun) return out;
+  SERVICES.forEach((name) => {
+    const from = prevRun.components[name], to = run.components[name];
+    if (from !== to) out.push({ name, from, to, kind: bumpKind(from, to) });
+  });
+  return out;
+}
+
+/* major / minor / patch - beeinflusst nur die Beschriftung, nicht die Farbe */
+function bumpKind(from, to) {
+  if (!from || !to) return "neu";
+  const a = from.split("."), b = to.split(".");
+  if (a[0] !== b[0]) return "major";
+  if (a[1] !== b[1]) return "minor";
+  return "patch";
+}
+
+const CDIFFS = RUNS.map((r, i) => componentDiff(i > 0 ? RUNS[i - 1] : null, r));
+
+/* Gesamtzahl der Versionsspruenge je Service - Sortierschluessel und Kennzahl */
+const SERVICE_BUMPS = Object.fromEntries(
+  SERVICES.map((s) => [s, VSPANS_BY_SERVICE[s].length - 1]));
 
 const WEEKDAY = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 function fmtDate(runId) {
@@ -538,13 +732,20 @@ function runTipHtml(i) {
   const r = RUNS[i], c = COUNTS[i], d = DIFFS[i];
   const row = (code, n) =>
     `<dt><span class="swatch sw-${CAT[code].key}"></span>${CAT[code].label}</dt><dd>${n}</dd>`;
+  const cd = CDIFFS[i];
+  /* Die gewechselten Versionen gehoeren in den Tooltip, nicht nur ihre Anzahl -
+     "3 Service-Updates" beantwortet nie die Frage, die man beim Hovern hat. */
+  const bumps = cd.slice(0, 4).map((x) =>
+    `<dt class="mono">${x.name}</dt><dd>${x.from} → ${x.to}</dd>`).join("")
+    + (cd.length > 4 ? `<dt class="muted">…</dt><dd>${cd.length - 4} weitere</dd>` : "");
   return `<div class="tip-title"><span>${fmtDateLong(r.run_id)}</span>
-            <span class="mono muted">${r.release_version}</span></div>
+            <span class="mono muted">${cd.length ? cd.length + " Versionswechsel" : "kein Versionswechsel"}</span></div>
           <dl>
             ${row("P", c.P)}${row("p", c.p)}${row("f", c.f)}${row("F", c.F)}
             <dt style="padding-top:4px">Tests gesamt</dt><dd style="padding-top:4px">${c.total}</dd>
             <dt>Status-Wechsel</dt><dd>${d.changed || 0}</dd>
             <dt>neue Commits</dt><dd>${r.commits.length}</dd>
+            ${bumps ? `<dt style="padding-top:6px" class="muted">Versionswechsel</dt><dd style="padding-top:6px"></dd>` + bumps : ""}
           </dl>`;
 }
 
@@ -564,18 +765,99 @@ function el(tag, attrs, children) {
 }
 function testLabel(t) { return t.suite + " › " + t.name; }
 
+/* Freitext aus der Suite - Testnamen, Commit-Betreffe, Fehlermeldungen - geht
+   nie ungeprueft ins Markup. Ein Test namens "A < B" wuerde sonst das Layout
+   zerlegen, und eine Fehlermeldung kann alles enthalten. */
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* Ereignissicht auf dieselben Daten: jeder Versionswechsel als eigener Eintrag,
+   chronologisch ueber alle Laeufe. VSPANS_BY_SERVICE zeigt Zustaende ("welche
+   Version lief wann"), VEVENTS die Uebergaenge ("was sprang wann"). Fuer eine
+   Chronik und fuer Sprungnavigation ist die Ereignisform die brauchbarere. */
+const VEVENTS = RUNS.flatMap((r, i) =>
+  CDIFFS[i].map((c) => Object.assign({ i, run_id: r.run_id }, c)));
+
+/* Laufindizes mit mindestens einem Versionssprung - die Rastpunkte, auf die
+   "voriges/naechstes Ereignis" springt. */
+const EVENT_RUNS = [...new Set(VEVENTS.map((e) => e.i))];
+
+/* Naechster Ereignislauf in Richtung dir (-1/+1), oder null am Rand. */
+function nextEventRun(from, dir) {
+  const hit = dir < 0
+    ? EVENT_RUNS.filter((i) => i < from).pop()
+    : EVENT_RUNS.find((i) => i > from);
+  return hit === undefined ? null : hit;
+}
+
+/* Kalendertage zwischen zwei Laeufen. Meist 1 - aber Naechte fallen aus, und
+   dann ist der Vorlauf nicht der Vortag. Das muss an jedem Vergleich dranstehen,
+   sonst liest man einen Zweitagessprung als Aenderung ueber Nacht. */
+function dayGap(prevRunId, runId) {
+  return Math.round(
+    (new Date(runId + "T00:00:00") - new Date(prevRunId + "T00:00:00")) / 86400000);
+}
+
+/* Beschriftung des Vergleichslaufs samt Hinweis auf ausgefallene Naechte. */
+function prevRunLabel(i) {
+  if (i === 0) return { text: "erster Lauf der Historie", note: "", gap: 0 };
+  const gap = dayGap(RUNS[i - 1].run_id, RUNS[i].run_id);
+  const missed = gap - 1;
+  return {
+    text: "gegenüber " + fmtDateLong(RUNS[i - 1].run_id),
+    gap,
+    note: missed > 0
+      ? `Vorlauf, nicht Vortag – ${missed} ausgefallene Nacht${missed === 1 ? "" : "e"} dazwischen`
+      : "",
+  };
+}
+
 
 /* ---------------------------------------------------------------- Legende */
 const LEG = [["P", "sw-pass"], ["p", "sw-passtag"], ["f", "sw-known"], ["F", "sw-new"]];
 document.getElementById("legend").innerHTML = LEG.map(([c, cls]) =>
   `<span class="legend-item"><span class="swatch ${cls}"></span>${CAT[c].label}</span>`).join("");
 
+document.getElementById("chartHint").textContent =
+  `${RUNS.length} Nächte · ${TESTS.length} Tests · ${SERVICES.length} Services · `
+  + `ausgefallene Läufe sind ausgelassen, nicht interpoliert · `
+  + `${VEVENTS.length} Versionssprünge in ${EVENT_RUNS.length} Nächten`;
+
 /* ------------------------------------------------------------ Geometrie */
-const SLOT = 18, BAR = 14, PADL = 54, PADR = 34, PLOT_H = 300, PADT = 10, PADB = 34;
+const PADL = 54, PADR = 34, PLOT_H = 300, PADT = 10, PADB = 34;
+
+/* Breite je Nacht aus der Zahl der Naechte statt fest: eine Historie von zwei
+   Wochen soll die Flaeche fuellen, eine von zwei Jahren nicht ueber den Rand
+   laufen. TARGET_W ist die Breite, die der Panelbereich ohne Scrollen hergibt. */
+const TARGET_W = 1150;
+const SLOT = Math.max(9, Math.min(28,
+  Math.floor((TARGET_W - PADL - PADR) / Math.max(1, RUNS.length))));
+const BAR = Math.max(4, SLOT - 4);
 const W = PADL + RUNS.length * SLOT + PADR;
-const YMAX = 220;
+
+/* Y-Achse aus den Daten: Schrittweite so, dass etwa fuenf Linien entstehen.
+   Ein fester Maximalwert stimmt nur fuer genau eine Suitegroesse - bei acht
+   Tests waeren die Balken sonst Striche am Nullpunkt. */
+function tickStep(max, target) {
+  const raw = Math.max(1, max) / target;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  return [1, 2, 2.5, 5, 10].map((m) => m * pow).find((s) => s >= raw) || 10 * pow;
+}
+const MAXTOTAL = Math.max(1, ...COUNTS.map((c) => c.total));
+const YSTEP = tickStep(MAXTOTAL, 5);
+const YMAX = Math.ceil(MAXTOTAL / YSTEP) * YSTEP;
+const YTICKS = Array.from({ length: Math.round(YMAX / YSTEP) + 1 }, (_, k) => k * YSTEP);
+
 const y = (v) => PADT + PLOT_H - (v / YMAX) * PLOT_H;
 const xOf = (i) => PADL + i * SLOT + (SLOT - BAR) / 2;
+
+/* Abstand der Datumsbeschriftungen in Naechten, gerechnet aus der Breite einer
+   Beschriftung ("Mo 06.07." in 10.5px Mono, rund 62px) plus Luft. An der Zahl
+   der Naechte darf das nicht haengen - eng wird es durch schmale Spalten. */
+const LABEL_STEP = Math.max(1, Math.ceil(90 / SLOT));
 
 function barPath(x, yTop, w, h, r) {
   if (h <= 0) return "";
@@ -585,16 +867,26 @@ function barPath(x, yTop, w, h, r) {
           L${x + w},${yTop + h} Z`;
 }
 
+/* Tooltip-Rumpf fuer die Versionssprunge einer Nacht - Band und Card teilen ihn */
+function eventTipHtml(i) {
+  const cd = CDIFFS[i];
+  return `<div class="tip-title"><span>${fmtDateLong(RUNS[i].run_id)}</span>
+            <span class="mono muted">${cd.length} Sprung${cd.length === 1 ? "" : "e"}</span></div>
+          <dl>${cd.map((x) =>
+            `<dt>${x.name}</dt><dd>${x.from} → ${x.to}</dd>`).join("")}</dl>`;
+}
+
 /* ------------------------------------------------------ Hauptdiagramm */
 const svg = document.getElementById("chart");
 svg.setAttribute("width", W);
 svg.setAttribute("height", PADT + PLOT_H + PADB);
 svg.setAttribute("viewBox", `0 0 ${W} ${PADT + PLOT_H + PADB}`);
 
-const gGrid = el("g"), gBars = el("g"), gAxis = el("g"), gSel = el("g", { class: "sel-ring" });
-svg.append(gGrid, gBars, gSel, gAxis);
+const gGrid = el("g"), gEvent = el("g"), gBars = el("g"), gAxis = el("g"),
+      gSel = el("g", { class: "sel-ring" });
+svg.append(gGrid, gEvent, gSel, gBars, gAxis);
 
-[0, 50, 100, 150, 200].forEach((v) => {
+YTICKS.forEach((v) => {
   gGrid.appendChild(el("line", {
     x1: PADL - 6, x2: W - PADR, y1: y(v), y2: y(v),
     stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1,
@@ -602,6 +894,17 @@ svg.append(gGrid, gBars, gSel, gAxis);
   gGrid.appendChild(el("text", {
     x: PADL - 10, y: y(v) + 4, "text-anchor": "end", fill: "var(--muted)",
     "font-size": 10.5, "font-family": "IBM Plex Mono, monospace", text: String(v),
+  }));
+});
+
+/* Ereignislinien hinter den Balken: jede Nacht mit Versionssprung bekommt eine
+   Senkrechte durch das Diagramm. Erst dadurch laesst sich ein Ausschlag einem
+   Sprung zuordnen, ohne zwischen zwei Grafiken hin und her zu messen. */
+EVENT_RUNS.forEach((i) => {
+  const x = PADL + i * SLOT + SLOT / 2;
+  gEvent.appendChild(el("line", {
+    x1: x, x2: x, y1: PADT, y2: PADT + PLOT_H,
+    stroke: "var(--accent)", "stroke-width": 1, opacity: 0.3,
   }));
 });
 
@@ -639,20 +942,13 @@ RUNS.forEach((r, i) => {
 /* Datumsachse: jede Woche eine Beschriftung, sonst kollidieren 58 Labels */
 RUNS.forEach((r, i) => {
   const isLast = i === RUNS.length - 1;
-  if (!isLast && (i % 7 !== 0 || i > RUNS.length - 5)) return;
+  /* Die letzte Nacht wird immer beschriftet; direkt davor wird ausgelassen,
+     damit sich die Beschriftungen nicht ueberlagern. */
+  if (!isLast && (i % LABEL_STEP !== 0 || i > RUNS.length - 1 - LABEL_STEP / 2)) return;
   gAxis.appendChild(el("text", {
     x: xOf(i) + BAR / 2, y: PADT + PLOT_H + 16, "text-anchor": "middle",
     fill: "var(--muted)", "font-size": 10.5,
     "font-family": "IBM Plex Mono, monospace", text: fmtDate(r.run_id),
-  }));
-});
-
-/* Versionswechsel als Marke im Diagramm */
-VSPANS.slice(1).forEach((sp) => {
-  const x = PADL + sp.start * SLOT - 1;
-  gAxis.appendChild(el("line", {
-    x1: x, x2: x, y1: PADT, y2: PADT + PLOT_H + 4,
-    stroke: "var(--accent)", "stroke-width": 1,
   }));
 });
 
@@ -672,6 +968,11 @@ const ny = (v) => 8 + NFH - (v / NFMAX) * NFH;
     fill: "var(--muted)", "font-size": 10.5, "font-family": "IBM Plex Mono, monospace",
     text: String(v) }));
 });
+EVENT_RUNS.forEach((i) => {
+  const x = PADL + i * SLOT + SLOT / 2;
+  nsvg.appendChild(el("line", { x1: x, x2: x, y1: 8, y2: ny(0),
+    stroke: "var(--accent)", "stroke-width": 1, opacity: 0.3 }));
+});
 RUNS.forEach((r, i) => {
   const v = NF[i];
   if (v > 0) {
@@ -688,44 +989,70 @@ RUNS.forEach((r, i) => {
   nsvg.appendChild(hit);
 });
 
-/* -------------------------------------------------------- Versionsband */
+/* ------------------------------------------------------- Ereignisband
+   Ein Kaestchen je Service, der in dieser Nacht in neuer Version lief. Die
+   Hoehe des Staepels ist damit die Zahl der Sprunge - ein durchgehendes
+   Versionsband gibt es nicht mehr, weil die sieben Services unabhaengig
+   springen und es kein gemeinsames Release gibt. */
+const VB_CELL = 4, VB_GAP = 1, VB_H = 12 + SERVICES.length * (VB_CELL + VB_GAP);
 const vb = document.getElementById("vband");
 vb.setAttribute("width", W);
-vb.setAttribute("height", 30);
-vb.setAttribute("viewBox", `0 0 ${W} 30`);
-vb.appendChild(el("text", { x: PADL - 10, y: 19, "text-anchor": "end", fill: "var(--muted)",
-  "font-size": 10, "font-family": "IBM Plex Mono, monospace", text: "Release" }));
-VSPANS.forEach((sp) => {
-  const x0 = PADL + sp.start * SLOT, x1 = PADL + (sp.end + 1) * SLOT;
-  const ci = Math.min(sp.idx, VCOLORS.length - 1);
-  vb.appendChild(el("rect", { x: x0 + 1, y: 6, width: x1 - x0 - 2, height: 17,
-    fill: `var(${VCOLORS[ci]})`, rx: 2 }));
-  if (sp.idx > 0) {
-    vb.appendChild(el("line", { x1: x0, x2: x0, y1: 2, y2: 27,
-      stroke: "var(--accent)", "stroke-width": 1 }));
-  }
-  if (x1 - x0 > 66) {
-    vb.appendChild(el("text", { x: x0 + 8, y: 18.5, fill: `var(${VINKS[ci]})`,
-      "font-size": 11, "font-family": "IBM Plex Mono, monospace",
-      "font-weight": 500, text: sp.version }));
-  }
+vb.setAttribute("height", VB_H);
+vb.setAttribute("viewBox", `0 0 ${W} ${VB_H}`);
+vb.appendChild(el("text", { x: PADL - 10, y: VB_H - 8, "text-anchor": "end",
+  fill: "var(--muted)", "font-size": 10,
+  "font-family": "IBM Plex Mono, monospace", text: "Sprünge" }));
+vb.appendChild(el("line", { x1: PADL - 6, x2: W - PADR, y1: VB_H - 3.5, y2: VB_H - 3.5,
+  stroke: "var(--grid)", "stroke-width": 1 }));
+
+const gVbSel = el("g", { class: "sel-ring" });
+vb.appendChild(gVbSel);
+RUNS.forEach((r, i) => {
+  const cd = CDIFFS[i];
+  cd.forEach((_, k) => {
+    vb.appendChild(el("rect", {
+      x: xOf(i) + 1, y: VB_H - 8 - (k + 1) * (VB_CELL + VB_GAP),
+      width: BAR - 2, height: VB_CELL, fill: "var(--accent)", rx: 1,
+    }));
+  });
+  const hit = el("rect", { x: PADL + i * SLOT, y: 0, width: SLOT, height: VB_H,
+    fill: "transparent", class: "bar-hit" });
+  hit.addEventListener("mouseenter", (e) =>
+    showTip(cd.length ? eventTipHtml(i) : runTipHtml(i), e));
+  hit.addEventListener("mousemove", moveTip);
+  hit.addEventListener("mouseleave", hideTip);
+  hit.addEventListener("click", () => select(i));
+  vb.appendChild(hit);
 });
 
 /* ------------------------------------------------------------ Auswahl */
 let sel = RUNS.length - 1;
+let chronFilter = "all";
+let failMode = false;      /* Status-Card: Wechsel oder alle Fehlschlaege */
 
 function select(i) {
   sel = Math.max(0, Math.min(RUNS.length - 1, i));
+  /* Auswahlmarke: getoente Spalte mit duennem Rand. Der Rand ist noetig,
+     seit man ueber die Datumsleiste blaettert - eine reine Flaechentoenung
+     findet man auf 58 Spalten nicht wieder. */
   gSel.innerHTML = "";
   gSel.appendChild(el("rect", {
-    x: PADL + sel * SLOT, y: PADT - 2, width: SLOT, height: PLOT_H + 2,
-    fill: "var(--surface-2)",
+    x: PADL + sel * SLOT + 0.5, y: PADT - 2, width: SLOT - 1, height: PLOT_H + 2,
+    fill: "var(--surface-2)", stroke: "var(--accent)", "stroke-width": 1, "stroke-opacity": 0.55,
   }));
   gSel.appendChild(el("rect", {
-    x: PADL + sel * SLOT, y: PADT + PLOT_H + 1, width: SLOT, height: 2,
+    x: PADL + sel * SLOT, y: PADT + PLOT_H + 1, width: SLOT, height: 3,
     fill: "var(--accent)",
   }));
+  gVbSel.innerHTML = "";
+  gVbSel.appendChild(el("rect", {
+    x: PADL + sel * SLOT + 0.5, y: 0.5, width: SLOT - 1, height: VB_H - 4,
+    fill: "var(--surface-2)", stroke: "var(--accent)", "stroke-width": 1, "stroke-opacity": 0.55,
+  }));
+  renderHead();
+  renderNav();
   renderDetail();
+  markChron();
 }
 
 svg.addEventListener("keydown", (e) => {
@@ -735,11 +1062,79 @@ svg.addEventListener("keydown", (e) => {
   if (e.key === "End")        { select(RUNS.length - 1); e.preventDefault(); }
 });
 
+/* ------------------------------------------------------ Datums-Navigation */
+const NAV = {
+  first:  () => 0,
+  prev:   () => sel - 1,
+  next:   () => sel + 1,
+  latest: () => RUNS.length - 1,
+  prevEv: () => nextEventRun(sel, -1),
+  nextEv: () => nextEventRun(sel, +1),
+};
+[["navFirst", "first"], ["navPrev", "prev"], ["navNext", "next"],
+ ["navLatest", "latest"], ["navPrevEv", "prevEv"], ["navNextEv", "nextEv"]]
+  .forEach(([id, key]) => document.getElementById(id).addEventListener("click", () => {
+    const t = NAV[key]();
+    if (t !== null) select(t);
+  }));
+
+/* Ein Versionswechsel als Satzstueck: "ingest-service 7.2.1 -> 7.3.0 (minor)" */
+function bumpHtml(x) {
+  return `<span class="b"><b>${esc(x.name)}</b> ${esc(x.from)}<span class="arrow">→</span>${esc(x.to)}` +
+         `<span class="bumptag">${x.kind}</span></span>`;
+}
+
+function renderNav() {
+  document.getElementById("navDate").textContent = fmtDateLong(RUNS[sel].run_id);
+  document.getElementById("navPos").textContent = `Lauf ${sel + 1} von ${RUNS.length}`;
+
+  /* Liegt zum Vorlauf ein Versionswechsel vor, steht er hier ausgeschrieben -
+     mit Vergleichsdatum, weil der Vorlauf nicht immer der Vortag ist. */
+  const cd = CDIFFS[sel], ref = prevRunLabel(sel);
+  const note = document.getElementById("navNote");
+  if (!cd.length) {
+    note.innerHTML = sel === 0
+      ? `<span class="lead">Erster Lauf der Historie – keine Vergleichsbasis.</span>`
+      : `<span class="lead">Keine Versionsänderung ${ref.text}.</span>`
+        + (ref.note ? `<span class="miss">· ${ref.note}</span>` : "");
+  } else {
+    note.innerHTML =
+      `<span class="lead">${cd.length === 1 ? "Neue Version" : cd.length + " neue Versionen"}
+         ${ref.text}:</span>` + cd.map(bumpHtml).join("")
+      + (ref.note ? `<span class="miss">· ${ref.note}</span>` : "");
+  }
+  const dis = (id, off) => document.getElementById(id).disabled = off;
+  dis("navFirst", sel === 0);
+  dis("navPrev", sel === 0);
+  dis("navNext", sel === RUNS.length - 1);
+  dis("navLatest", sel === RUNS.length - 1);
+  dis("navPrevEv", nextEventRun(sel, -1) === null);
+  dis("navNextEv", nextEventRun(sel, +1) === null);
+}
+
+/* Fehlermeldung eines Tests, sofern sie eingebettet ist. `nrd build` legt sie
+   nur fuer die juengsten Naechte bei - genau die, die morgens jemand aufmacht;
+   fuer aeltere bleibt die Detaildatei im Archiv die Quelle. */
+function msgHtml(runIdx, testIdx, known) {
+  const msgs = RUNS[runIdx].msgs;
+  const m = msgs && msgs[String(testIdx)];
+  if (!m) return "";
+  return `<button class="msg${known ? " known" : ""}" type="button"
+            aria-expanded="false">${esc(m)}</button>`;
+}
+
+/* Ein Klick auf die Meldung klappt sie auf und wieder zu. */
+function wireMsgs(host) {
+  host.querySelectorAll(".msg").forEach((b) => b.addEventListener("click", () =>
+    b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true"
+      ? "false" : "true")));
+}
+
 /* ------------------------------------------------------ Detail-Panels */
 function renderDetail() {
-  const r = RUNS[sel], d = DIFFS[sel], prev = sel > 0 ? RUNS[sel - 1] : null;
-  document.getElementById("selDate1").textContent = fmtDateLong(r.run_id);
-  document.getElementById("selDate2").textContent = fmtDateLong(r.run_id);
+  const r = RUNS[sel], d = DIFFS[sel], cd = CDIFFS[sel], prev = sel > 0 ? RUNS[sel - 1] : null;
+  ["selDate1", "selDate2", "selDate3"].forEach((id) =>
+    document.getElementById(id).textContent = fmtDateLong(r.run_id));
 
   const cList = document.getElementById("commits");
   cList.innerHTML = "";
@@ -750,54 +1145,126 @@ function renderDetail() {
   } else {
     r.commits.forEach((c) => {
       cList.appendChild(el("div", { class: "list-row", html:
-        `<span class="sha mono">${c.sha.slice(0, 7)}</span>
-         <span><span class="subject">${c.subject}</span>
-         <div class="meta mono">${c.author}</div></span>` }));
+        `<span class="sha mono">${esc(c.sha.slice(0, 7))}</span>
+         <span><span class="subject">${esc(c.subject)}</span>
+         <div class="meta mono">${esc(c.author)}</div></span>` }));
     });
   }
+
+  /* Zwei Sichten auf dieselbe Nacht: was sich geaendert hat, und was rot ist.
+     Ein Test, der die dritte Nacht in Folge faellt, taucht in keiner
+     Wechselliste auf - seine Meldung waere sonst nirgends zu sehen. */
+  const failIdx = [];
+  for (let i = 0; i < r.s.length; i++) if (FAILISH.includes(r.s[i])) failIdx.push(i);
+  const modes = document.getElementById("changeModes");
+  modes.innerHTML =
+    `<button class="fbtn" type="button" data-m="changes" aria-pressed="${!failMode}">
+       Wechsel <span class="cnt">${d.changed || 0}</span></button>
+     <button class="fbtn" type="button" data-m="fails" aria-pressed="${failMode}">
+       alle Fehlschläge <span class="cnt">${failIdx.length}</span></button>`;
+  modes.querySelectorAll(".fbtn").forEach((b) => b.addEventListener("click", () => {
+    failMode = b.dataset.m === "fails";
+    renderDetail();
+  }));
 
   const chList = document.getElementById("changes");
   chList.innerHTML = "";
-  const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
-  const rows = [];
-  order.forEach((k) => d[k] && d[k].forEach((e) => rows.push([k, e])));
-  if (!rows.length) {
-    chList.appendChild(el("div", { class: "empty",
-      html: prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf – keine Vergleichsbasis." }));
-  } else {
-    rows.slice(0, 40).forEach(([k, e]) => {
-      const m = DIFF_META[k];
-      chList.appendChild(el("div", { class: "list-row", html:
-        `<span class="chip"><span class="dot" style="background:var(${m.varName})"></span>${m.label}</span>
-         <span><span class="test mono">${e.test.name}</span>
-         <div class="meta mono">${e.test.suite}</div></span>` }));
-    });
-    if (rows.length > 40) {
-      chList.appendChild(el("div", { class: "empty", text: `… und ${rows.length - 40} weitere` }));
+  if (failMode) {
+    if (!failIdx.length) {
+      chList.appendChild(el("div", { class: "empty", text: "Kein Test ist fehlgeschlagen." }));
+    } else {
+      /* Neue Fails zuerst - das ist die Arbeit fuer heute. */
+      failIdx.sort((a, b) => (r.s[a] === "F" ? 0 : 1) - (r.s[b] === "F" ? 0 : 1));
+      failIdx.forEach((i) => {
+        const code = r.s[i], t = TESTS[i];
+        chList.appendChild(el("div", { class: "list-row", html:
+          `<span class="chip"><span class="dot" style="background:var(${CAT[code].varName})"></span>${CAT[code].label}</span>
+           <span><span class="test mono">${esc(t.name)}</span>
+           <div class="meta mono">${esc(t.suite)}</div></span>
+           ${msgHtml(sel, i, code === "f")}` }));
+      });
     }
+  } else {
+    const order = ["regression", "fixed", "untagged", "tagged", "added", "removed"];
+    const rows = [];
+    order.forEach((k) => d[k] && d[k].forEach((e) => rows.push([k, e])));
+    if (!rows.length) {
+      chList.appendChild(el("div", { class: "empty",
+        html: prev ? "Kein Test hat sein Ergebnis geändert." : "Erster Lauf – keine Vergleichsbasis." }));
+    } else {
+      rows.slice(0, 40).forEach(([k, e]) => {
+        const m = DIFF_META[k];
+        /* Meldung nur, wo der Test danach auch rot ist - bei "wieder gruen"
+           stuende die Meldung von vorgestern. */
+        const rot = FAILISH.includes(e.to);
+        chList.appendChild(el("div", { class: "list-row", html:
+          `<span class="chip"><span class="dot" style="background:var(${m.varName})"></span>${m.label}</span>
+           <span><span class="test mono">${esc(e.test.name)}</span>
+           <div class="meta mono">${esc(e.test.suite)}</div></span>
+           ${rot ? msgHtml(sel, e.i, e.to === "f") : ""}` }));
+      });
+      if (rows.length > 40) {
+        chList.appendChild(el("div", { class: "empty", text: `… und ${rows.length - 40} weitere` }));
+      }
+    }
+  }
+  wireMsgs(chList);
+
+  /* Versionswechsel der gewaehlten Nacht gegenueber dem Vorlauf */
+  const vList = document.getElementById("vevents");
+  const ref = prevRunLabel(sel);
+  vList.innerHTML = "";
+  if (!cd.length) {
+    const back = nextEventRun(sel, -1);
+    vList.appendChild(el("div", { class: "empty", html: prev
+      ? `Kein Service hat die Version gewechselt ${ref.text} –
+         was sich geändert hat, kommt aus dem Testcode.`
+         + (ref.note ? `<span class="miss">${ref.note}</span>` : "")
+      : "Erster Lauf – keine Vergleichsbasis." }));
+    if (back !== null) {
+      const b = el("button", { class: "lnk", type: "button",
+        text: `↩ letzter Wechsel: ${fmtDate(RUNS[back].run_id)} (${CDIFFS[back].map((x) => x.name).join(", ")})` });
+      b.addEventListener("click", () => select(back));
+      vList.appendChild(b);
+    }
+  } else {
+    vList.appendChild(el("div", { class: "vlead", html:
+      `${cd.length} von ${SERVICES.length} Services ${cd.length === 1 ? "lief" : "liefen"}
+       ${ref.text} in einer neuen Version:`
+      + (ref.note ? `<span class="miss">${ref.note}</span>` : "") }));
+    cd.forEach((x) => {
+      vList.appendChild(el("div", { class: "vrow", html:
+        `<span class="n">${esc(x.name)}</span>
+         <span><span class="bumptag">${x.kind}</span></span>
+         <span class="jump">Version ${esc(x.from)}<span class="arrow">→</span>${esc(x.to)}</span>` }));
+    });
   }
 }
 
-/* ------------------------------------------------------------- Kacheln */
-function renderTiles() {
-  const i = RUNS.length - 1, c = COUNTS[i], p = COUNTS[i - 1], r = RUNS[i];
-  const delta = (now, before, invert) => {
+/* ------------------------------------------------------------- Kopfzeile */
+function renderHead() {
+  const c = COUNTS[sel], p = sel > 0 ? COUNTS[sel - 1] : null, r = RUNS[sel], cd = CDIFFS[sel];
+  const delta = (now, before) => {
+    if (before === null) return `<span class="delta">erster Lauf</span>`;
     const dv = now - before;
     if (dv === 0) return `<span class="delta">unverändert</span>`;
-    const sign = dv > 0 ? "+" : "−";
-    return `<span class="delta">${sign}${Math.abs(dv)} ggü. Vornacht</span>`;
+    return `<span class="delta">${dv > 0 ? "+" : "−"}${Math.abs(dv)} ggü. Vorlauf</span>`;
   };
+  const isLatest = sel === RUNS.length - 1;
+  document.getElementById("heroEyebrow").textContent =
+    isLatest ? "Letzter Lauf" : "Gewählter Lauf · " + fmtDate(r.run_id);
   document.getElementById("heroVal").textContent = c.F;
   document.getElementById("heroCap").innerHTML =
-    `neue Fails ohne <code>fail:</code>-Tag · ${delta(c.F, p.F)}`;
+    `neue Fails ohne <code>fail:</code>-Tag · ${delta(c.F, p && p.F)}`;
 
+  const svcNames = cd.map((x) => x.name).join(", ");
   document.getElementById("tiles").innerHTML = [
     ["Tests gesamt", c.total, `<span class="delta">${pct(c.pass, c.total)} grün</span>`],
-    ["Pass", c.P, delta(c.P, p.P)],
+    ["Pass", c.P, delta(c.P, p && p.P)],
     ["Pass mit fail-Tag", c.p, `<span class="delta">Tag-Kandidaten</span>`],
-    ["Fails bekannt", c.f, delta(c.f, p.f)],
-    ["Release", `<span style="font-size:17px">${r.release_version}</span>`,
-      `<span class="delta">Quelle: ${r.version_source === "metadata" ? "Suite-Metadata" : "Suite-Doku"}</span>`],
+    ["Fails bekannt", c.f, delta(c.f, p && p.f)],
+    ["Versionssprünge", cd.length,
+      `<span class="delta mono">${cd.length ? svcNames : "kein Service-Update"}</span>`],
     ["Laufzeit", `<span style="font-size:17px">${fmtDuration(r.elapsed_s)}</span>`,
       `<span class="delta">Pipeline #${r.pipeline_id}</span>`],
   ].map(([label, val, sub]) => `
@@ -805,21 +1272,83 @@ function renderTiles() {
       <span class="val tnum">${val}</span>${sub}</div>`).join("");
 }
 
+/* -------------------------------------------------------------- Chronik */
+function renderChron() {
+  const counts = {};
+  VEVENTS.forEach((e) => { counts[e.name] = (counts[e.name] || 0) + 1; });
+  const fhost = document.getElementById("chronFilters");
+  fhost.innerHTML = [`<button class="fbtn" type="button" data-f="all"
+      aria-pressed="${chronFilter === "all"}">alle Services <span class="cnt">${VEVENTS.length}</span></button>`]
+    .concat(SERVICES.filter((s) => counts[s]).map((s) =>
+      `<button class="fbtn" type="button" data-f="${s}" aria-pressed="${chronFilter === s}">
+         ${s} <span class="cnt">${counts[s]}</span></button>`)).join("");
+  fhost.querySelectorAll(".fbtn").forEach((b) =>
+    b.addEventListener("click", () => { chronFilter = b.dataset.f; renderChron(); markChron(); }));
+
+  document.getElementById("chronTotal").textContent =
+    `${VEVENTS.length} Sprünge · ${EVENT_RUNS.length} von ${RUNS.length} Nächten mit Update`;
+
+  const rows = VEVENTS.filter((e) => chronFilter === "all" || e.name === chronFilter);
+  const table = document.getElementById("chronTable");
+  const emptyBox = document.getElementById("chronEmpty");
+  if (!rows.length) {
+    table.innerHTML = "";
+    emptyBox.hidden = false;
+    emptyBox.textContent = "Kein Sprung für diese Auswahl.";
+    return;
+  }
+  emptyBox.hidden = true;
+
+  /* Abstand zum vorigen Sprung desselben Service - die Zahl, die man beim
+     Durchsehen sucht: laeuft der Service woechentlich oder alle drei Wochen? */
+  const lastByName = {};
+  const gaps = new Map();
+  VEVENTS.forEach((e) => {
+    const prev = lastByName[e.name];
+    gaps.set(e, prev === undefined ? null : e.i - prev);
+    lastByName[e.name] = e.i;
+  });
+
+  table.innerHTML =
+    `<thead><tr><th>Nacht</th><th>Service</th><th>vorher → nachher</th><th>Art</th>
+       <th>seit letztem Sprung</th></tr></thead><tbody>`
+    + rows.slice().reverse().map((e) => {
+      const g = gaps.get(e);
+      return `<tr data-i="${e.i}">
+        <td><button class="lnk" type="button" data-jump="${e.i}">${fmtDate(e.run_id)}</button></td>
+        <td class="mono">${e.name}</td>
+        <td class="mono">${e.from}<span class="arrow">→</span>${e.to}</td>
+        <td><span class="chip">${e.kind}</span></td>
+        <td class="gap">${g === null ? "erster Stand" : g + " Nächte"}</td>
+      </tr>`;
+    }).join("") + "</tbody>";
+
+  table.querySelectorAll("[data-jump]").forEach((b) =>
+    b.addEventListener("click", () => select(Number(b.dataset.jump))));
+}
+
+/* Zeilen der gewaehlten Nacht markieren - die Chronik ist damit auch die
+   Ortsanzeige fuer die Auswahl oben. */
+function markChron() {
+  document.querySelectorAll("#chronTable tbody tr").forEach((tr) =>
+    tr.classList.toggle("is-sel", Number(tr.dataset.i) === sel));
+}
+
 /* -------------------------------------------------------- Tabellenansicht */
 function renderTable() {
-  const head = `<thead><tr><th>Nacht</th><th>Release</th><th>Gesamt</th><th>Pass</th>
+  const head = `<thead><tr><th>Nacht</th><th>Sprünge</th><th>Gesamt</th><th>Pass</th>
     <th>Pass+Tag</th><th>Fail bekannt</th><th>Fail neu</th><th>Wechsel</th><th>Commits</th></tr></thead>`;
   const body = RUNS.map((r, i) => {
     const c = COUNTS[i], d = DIFFS[i];
-    return `<tr><td class="mono">${r.run_id}</td><td class="mono">${r.release_version}</td>
+    return `<tr><td class="mono">${r.run_id}</td><td>${CDIFFS[i].length}</td>
       <td>${c.total}</td><td>${c.P}</td><td>${c.p}</td><td>${c.f}</td><td>${c.F}</td>
       <td>${d.changed || 0}</td><td>${r.commits.length}</td></tr>`;
   }).reverse().join("");
   document.getElementById("runTable").innerHTML = head + "<tbody>" + body + "</tbody>";
 }
 
-renderTiles();
 renderTable();
+renderChron();
 select(RUNS.length - 1);
 document.querySelector(".chart-wrap").scrollLeft = W;
 </script>

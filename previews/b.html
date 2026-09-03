@@ -666,13 +666,19 @@ function runTipHtml(i) {
   const row = (code, n) =>
     `<dt><span class="swatch sw-${CAT[code].key}"></span>${CAT[code].label}</dt><dd>${n}</dd>`;
   const cd = CDIFFS[i];
+  /* Die gewechselten Versionen gehoeren in den Tooltip, nicht nur ihre Anzahl -
+     "3 Service-Updates" beantwortet nie die Frage, die man beim Hovern hat. */
+  const bumps = cd.slice(0, 4).map((x) =>
+    `<dt class="mono">${x.name}</dt><dd>${x.from} → ${x.to}</dd>`).join("")
+    + (cd.length > 4 ? `<dt class="muted">…</dt><dd>${cd.length - 4} weitere</dd>` : "");
   return `<div class="tip-title"><span>${fmtDateLong(r.run_id)}</span>
-            <span class="mono muted">${cd.length ? cd.length + " Service-Updates" : "kein Update"}</span></div>
+            <span class="mono muted">${cd.length ? cd.length + " Versionswechsel" : "kein Versionswechsel"}</span></div>
           <dl>
             ${row("P", c.P)}${row("p", c.p)}${row("f", c.f)}${row("F", c.F)}
             <dt style="padding-top:4px">Tests gesamt</dt><dd style="padding-top:4px">${c.total}</dd>
             <dt>Status-Wechsel</dt><dd>${d.changed || 0}</dd>
             <dt>neue Commits</dt><dd>${r.commits.length}</dd>
+            ${bumps ? `<dt style="padding-top:6px" class="muted">Versionswechsel</dt><dd style="padding-top:6px"></dd>` + bumps : ""}
           </dl>`;
 }
 
@@ -691,6 +697,56 @@ function el(tag, attrs, children) {
   return node;
 }
 function testLabel(t) { return t.suite + " › " + t.name; }
+
+/* Freitext aus der Suite - Testnamen, Commit-Betreffe, Fehlermeldungen - geht
+   nie ungeprueft ins Markup. Ein Test namens "A < B" wuerde sonst das Layout
+   zerlegen, und eine Fehlermeldung kann alles enthalten. */
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* Ereignissicht auf dieselben Daten: jeder Versionswechsel als eigener Eintrag,
+   chronologisch ueber alle Laeufe. VSPANS_BY_SERVICE zeigt Zustaende ("welche
+   Version lief wann"), VEVENTS die Uebergaenge ("was sprang wann"). Fuer eine
+   Chronik und fuer Sprungnavigation ist die Ereignisform die brauchbarere. */
+const VEVENTS = RUNS.flatMap((r, i) =>
+  CDIFFS[i].map((c) => Object.assign({ i, run_id: r.run_id }, c)));
+
+/* Laufindizes mit mindestens einem Versionssprung - die Rastpunkte, auf die
+   "voriges/naechstes Ereignis" springt. */
+const EVENT_RUNS = [...new Set(VEVENTS.map((e) => e.i))];
+
+/* Naechster Ereignislauf in Richtung dir (-1/+1), oder null am Rand. */
+function nextEventRun(from, dir) {
+  const hit = dir < 0
+    ? EVENT_RUNS.filter((i) => i < from).pop()
+    : EVENT_RUNS.find((i) => i > from);
+  return hit === undefined ? null : hit;
+}
+
+/* Kalendertage zwischen zwei Laeufen. Meist 1 - aber Naechte fallen aus, und
+   dann ist der Vorlauf nicht der Vortag. Das muss an jedem Vergleich dranstehen,
+   sonst liest man einen Zweitagessprung als Aenderung ueber Nacht. */
+function dayGap(prevRunId, runId) {
+  return Math.round(
+    (new Date(runId + "T00:00:00") - new Date(prevRunId + "T00:00:00")) / 86400000);
+}
+
+/* Beschriftung des Vergleichslaufs samt Hinweis auf ausgefallene Naechte. */
+function prevRunLabel(i) {
+  if (i === 0) return { text: "erster Lauf der Historie", note: "", gap: 0 };
+  const gap = dayGap(RUNS[i - 1].run_id, RUNS[i].run_id);
+  const missed = gap - 1;
+  return {
+    text: "gegenüber " + fmtDateLong(RUNS[i - 1].run_id),
+    gap,
+    note: missed > 0
+      ? `Vorlauf, nicht Vortag – ${missed} ausgefallene Nacht${missed === 1 ? "" : "e"} dazwischen`
+      : "",
+  };
+}
 
 
 const LEG = [["P", "sw-pass"], ["p", "sw-passtag"], ["f", "sw-known"], ["F", "sw-new"]];
