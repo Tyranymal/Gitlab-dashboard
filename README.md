@@ -178,7 +178,10 @@ die geplante Pipeline und `pages` zum Veröffentlichen. Voraussetzungen:
 
 Die Daten werden zwar committet, aber **nie in den Dev-Branch**. Der Nachtlauf
 pusht ausschließlich auf `nightly-data`, einen Branch, der nie gemergt wird und
-nur diesen einen Zweck hat. Damit greift keine Approval-Regel: Freigaben hängen
+nur diesen einen Zweck hat. Ist der Dev-Branch so geschützt, dass dorthin nur
+per Merge Request geschrieben werden darf, betrifft das den Nachtlauf nicht: er
+schreibt nicht dorthin. Auch die geplante Pipeline selbst ist kein Schreibzugriff
+– sie *läuft auf* dem Dev-Branch und liest ihn nur aus. Damit greift keine Approval-Regel: Freigaben hängen
 an Merge Requests auf geschützte Branches, ein direkter Push auf einen
 ungeschützten Branch läuft daran vorbei. Der Code – `nrd/` und die
 `.gitlab-ci.yml` – geht dagegen ganz normal per MR in den Dev-Branch, mit euren
